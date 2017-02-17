@@ -26,11 +26,22 @@ char** to_ansi_char_array(CharacterVector charVec)
 	return res;
 }
 
-void free_ansi_char_array(char ** values, int arrayLength)
+template<typename T>
+void free_jagged_array(T** values, int arrayLength)
 {
 	for (int i = 0; i < arrayLength; i++)
 		delete[] values[i];
 	delete[] values;
+}
+
+void free_ansi_char_array(char ** values, int arrayLength)
+{
+	free_jagged_array<char>(values, arrayLength);
+}
+
+void free_double_ptr_array(double** values, int arrayLength)
+{
+	free_jagged_array<double>(values, arrayLength);
 }
 
 double** as_double_ptr_array(NumericMatrix& mat)
@@ -65,7 +76,7 @@ CharacterVector to_r_character_vector(char** names, int size, bool cleanup)
 	for (int i = 0; i < size; i++)
 		v[i] = std::string(names[i]);
 	if(cleanup)
-		DeleteAnsiStringArray(names, size);
+		delete_ansi_string_array(names, size);
 	return v;
 }
 

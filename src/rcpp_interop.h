@@ -3,13 +3,18 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
+// Forward declaration of delete_ansi_string_array
+// that must be implemented by the using library.
+void delete_ansi_string_array(char** values, int arrayLength);
+
 char** to_ansi_char_array(CharacterVector charVec);
 void free_ansi_char_array(char ** values, int arrayLength);
 double** as_double_ptr_array(NumericMatrix& mat);
 double** to_double_ptr_array(const NumericMatrix& mat);
+void free_double_ptr_array(double** values, int arrayLength);
 
-CharacterVector to_r_character_vector(char** names, int size, bool cleanup=true);
-NumericVector to_r_numeric_vector(double * values, int length, bool cleanup = false);
+CharacterVector to_r_character_vector(char** names, int size, bool cleanup = true);
+NumericVector to_r_numeric_vector(double* values, int length, bool cleanup = false);
 
 //MarshaledDateTime toDateTimeStruct(const Datetime& dt);
 //Datetime toDateTime(const MarshaledDateTime& mdt);
