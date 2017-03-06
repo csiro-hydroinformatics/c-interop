@@ -3,6 +3,7 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
+#include "common_c_interop.h"
 #include "c_interop_forward_decl.h"
 
 char** to_ansi_char_array(CharacterVector charVec);

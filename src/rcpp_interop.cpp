@@ -73,13 +73,10 @@ CharacterVector to_r_character_vector(char** names, int size, bool cleanup)
 
 NumericVector to_r_numeric_vector(double* values, int length, bool cleanup)
 {
+	std::vector<double> v(values, values + length);
 	NumericVector data(length);
-	// std::copy(values, values + length * sizeof(double), data);
-	for (int i = 0; i < length; i++)
-	{
-		data[i] = values[i];
-	}
+	data.assign(v.begin(), v.end());
 	if (cleanup)
-		delete values;
+		delete_array(values);
 	return data;
 }
