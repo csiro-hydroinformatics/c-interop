@@ -14,6 +14,19 @@ namespace cinterop
 {
 	namespace utils
 	{
+		template<typename S>
+		char* to_ansi_string(const S& s);
+
+		template<>
+		char* to_ansi_string(const string& s)
+		{
+			// Also of interest though not used here:
+			// http://stackoverflow.com/questions/347949/convert-stdstring-to-const-char-or-char?rq=1
+			//
+			char* c = STRDUP(s.c_str());
+			return c;
+		}
+
 		template<typename T = double, typename U = double>
 		U* vector_to_c_array(const vector<T>& values, std::function<U(const T&)> converter, int* size = nullptr)
 		{
