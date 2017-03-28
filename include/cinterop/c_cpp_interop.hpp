@@ -9,6 +9,7 @@
 #include "c_interop_forward_decl.h"
 
 using std::vector;
+using std::string;
 
 namespace cinterop
 {
@@ -18,7 +19,7 @@ namespace cinterop
 		char* to_ansi_string(const S& s);
 
 		template<>
-		char* to_ansi_string(const string& s)
+		inline char* to_ansi_string<string>(const string& s)
 		{
 			// Also of interest though not used here:
 			// http://stackoverflow.com/questions/347949/convert-stdstring-to-const-char-or-char?rq=1
@@ -55,7 +56,7 @@ namespace cinterop
 		using namespace boost::gregorian;
 		using namespace boost::posix_time;
 
-		template<typename S = std::string>
+		template<typename S = string>
 		char** to_ansi_char_array(const std::vector<S>& charVec)
 		{
 			char** result = new char*[charVec.size()];
@@ -100,7 +101,7 @@ namespace cinterop
 			delete[] values;
 		}
 
-		template<typename S = std::string>
+		template<typename S = string>
 		std::vector<S> to_cpp_string_vector(char** names, int size, bool cleanup = true)
 		{
 			std::vector<S> v(size);
