@@ -15,18 +15,39 @@ namespace cinterop
 {
 	namespace utils
 	{
+		// template declarations
 		template<typename S>
 		char* to_ansi_string(const S& s);
 
-		template<>
-		inline char* to_ansi_string<string>(const string& s)
-		{
-			// Also of interest though not used here:
-			// http://stackoverflow.com/questions/347949/convert-stdstring-to-const-char-or-char?rq=1
-			//
-			char* c = STRDUP(s.c_str());
-			return c;
-		}
+		template<typename V>
+		char** to_ansi_char_array(const V& charVec);
+
+		template<typename S>
+		char** to_ansi_char_array(const std::vector<S>& charVec);
+
+		template<typename F>
+		F* to_c_array(const std::vector<F>& dblvec);
+
+		template<typename F>
+		void free_c_array(F* values, int arrayLength);
+
+		template<typename F>
+		double** to_double_ptr_array(const F& mat);
+
+		template<typename F>
+		double** to_double_ptr_array(const std::vector<std::vector<F>>& mat);
+
+		template<typename T>
+		T to_custom_character_vector(char** names, int size, bool cleanup);
+
+		template<typename N>
+		N to_custom_numeric_vector(double* values, int length, bool cleanup);
+
+		template<typename T>
+		date_time_to_second to_date_time_to_second(const T& dt);
+
+		template<typename T>
+		T from_date_time_to_second(const date_time_to_second& dt);
 
 		template<typename T = double, typename U = double>
 		U* vector_to_c_array(const vector<T>& values, std::function<U(const T&)> converter, int* size = nullptr)
@@ -51,46 +72,6 @@ namespace cinterop
 		T Identity(const T& x)
 		{
 			return x;
-		}
-
-		using namespace boost::gregorian;
-		using namespace boost::posix_time;
-
-		template<typename S = string>
-		char** to_ansi_char_array(const std::vector<S>& charVec)
-		{
-			char** result = new char*[charVec.size()];
-			for (size_t i = 0; i < charVec.size(); i++)
-			{
-				result[i] = STRDUP(charVec[i].c_str());
-			}
-			return result;
-		}
-
-		template<typename F = double>
-		F* to_c_array(const std::vector<F>& dblvec)
-		{
-			int n = dblvec.size();
-			auto numArray = new F[n];
-			std::copy(dblvec.begin(), dblvec.begin() + n, numArray);
-			return numArray;
-		}
-
-		template<typename F = double>
-		void free_c_array(F* values, int arrayLength)
-		{
-			delete values;
-		}
-
-		template<typename F = double>
-		F** to_double_ptr_array(const std::vector<std::vector<F>>& mat)
-		{
-			F** result = new F*[mat.size()];
-			for (size_t i = 0; i < mat.size(); i++)
-			{
-				result[i] = to_c_array<F>(mat[i]);
-			}
-			return result;
 		}
 
 		template<typename F = double>
@@ -121,6 +102,10 @@ namespace cinterop
 			return data;
 		}
 
+		// date-time interop
+		using namespace boost::gregorian;
+		using namespace boost::posix_time;
+		
 		template<typename T = ptime>
 		T to_ptime(const date_time_to_second& dt)
 		{
@@ -142,12 +127,61 @@ namespace cinterop
 			tt.second = t.seconds();
 		}
 
-		template<typename T = ptime>
-		date_time_to_second to_date_time_to_second(const T& dt)
+		template<>
+		inline date_time_to_second to_date_time_to_second<ptime>(const ptime& dt)
 		{
 			date_time_to_second tt;
 			to_date_time_to_second(dt, tt);
 			return tt;
+		}
+
+		// C interop Template specialisations for STL classes and common types
+
+		template<>
+		inline char* to_ansi_string<string>(const string& s)
+		{
+			// Also of interest though not used here:
+			// http://stackoverflow.com/questions/347949/convert-stdstring-to-const-char-or-char?rq=1
+			//
+			char* c = STRDUP(s.c_str());
+			return c;
+		}
+
+		template<>
+		inline char** to_ansi_char_array<string>(const std::vector<string>& charVec)
+		{
+			char** result = new char*[charVec.size()];
+			for (size_t i = 0; i < charVec.size(); i++)
+			{
+				result[i] = STRDUP(charVec[i].c_str());
+			}
+			return result;
+		}
+
+		template<>
+		inline double* to_c_array<double>(const std::vector<double>& dblvec)
+		{
+			int n = dblvec.size();
+			auto numArray = new double[n];
+			std::copy(dblvec.begin(), dblvec.begin() + n, numArray);
+			return numArray;
+		}
+
+		template<>
+		inline void free_c_array<double>(double* values, int arrayLength)
+		{
+			delete values;
+		}
+
+		template<>
+		inline double** to_double_ptr_array<double>(const std::vector<std::vector<double>>& mat)
+		{
+			double** result = new double*[mat.size()];
+			for (size_t i = 0; i < mat.size(); i++)
+			{
+				result[i] = to_c_array<double>(mat[i]);
+			}
+			return result;
 		}
 
 	}
