@@ -89,5 +89,23 @@ updatePathWindows <- function(envVarName='LIBRARY_PATH', libfilename='swift.dll'
   return(startupMsg)
 }
 
+#' @export
+isExternalObjRef <- function(x, type) {
+  result <- is(x, 'ExternalObjRef')
+  if(result) {
+    if(!missing(type)) {
+      result <- (result && x@type == type)
+    }
+  }
+  return(result)
+}
 
+#' @export
+argErrorExternalObjType <- function(x, expectedType) {
+  if(!isExternalObjRef(x)) {
+    return(paste0('Expected type "', expectedType, '" but got object of type "', typeof(x), '" and class "', class(x), '"' ))
+  } else {
+    return(paste0('Expected ExternalObj type "', expectedType, '" but got ExternalObj type "', x@type))
+  }
+}
 
