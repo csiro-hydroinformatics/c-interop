@@ -10,6 +10,9 @@
 
 using namespace Rcpp;
 
+#include "moirai/opaque_pointers.hpp"
+using moirai::opaque_pointer_handle;
+
 //void callGc()
 //{
 //	Rcpp::Function gc("gc");
@@ -149,4 +152,26 @@ namespace cinterop
 
 
 	}
+#define S4_EXTERNAL_OBJ_CLASSNAME "ExternalObjRef"
+#define S4_OBJ_SLOTNAME "obj"
+#define S4_TYPE_SLOTNAME "type"
+	template<typename T = opaque_pointer_handle>
+	Rcpp::S4 create_rcpp_xptr_wrapper(const XPtr<T>& xptr, const string& type = "")
+	{
+		Rcpp::S4 xptrWrapper(S4_EXTERNAL_OBJ_CLASSNAME);
+		xptrWrapper.slot(S4_OBJ_SLOTNAME) = xptr;
+		xptrWrapper.slot(S4_TYPE_SLOTNAME) = type;
+		return xptrWrapper;
+	}
+
+	template<typename T = opaque_pointer_handle>
+	Rcpp::S4 create_rcpp_xptr_wrapper(void* pointer, const string& type = "")
+	{
+		auto xptr = XPtr<T>(new T(pointer));
+		Rcpp::S4 xptrWrapper(S4_EXTERNAL_OBJ_CLASSNAME);
+		xptrWrapper.slot(S4_OBJ_SLOTNAME) = xptr;
+		xptrWrapper.slot(S4_TYPE_SLOTNAME) = type;
+		return xptrWrapper;
+	}
+
 }
