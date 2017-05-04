@@ -22,3 +22,5 @@ setClass('RegularTimeSeries',
     EnsembleSize=0,
     NumericData=as.matrix(numeric()))
 )
+
+

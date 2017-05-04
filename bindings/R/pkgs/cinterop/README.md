@@ -5,7 +5,7 @@ cinterop R package
 
 # Building
 
-# Generating code to wrap SWIFT
+# Generating code to wrap
 
 # See also
 

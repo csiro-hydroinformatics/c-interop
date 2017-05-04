@@ -46,7 +46,7 @@ appendStartupMsg <- function(msg, prior) {
 }
 
 #' @export
-updatePathWindows <- function(envVarName='LIBRARY_PATH', libfilename='swift.dll') {
+updatePathWindows <- function(envVarName='LIBRARY_PATH', libfilename='mylib.dll') {
   startupMsg <- ''
   if(Sys.info()['sysname'] == 'Windows') 
   {
@@ -109,3 +109,33 @@ argErrorExternalObjType <- function(x, expectedType) {
   }
 }
 
+#' @import xts
+#' @export
+asInteropRegularTimeSeries <- function(xts_mts) {
+  stopifnot(xts::is.xts(xts_mts))
+  mts <- new("RegularTimeSeries", 
+    TsGeom=getTsGeometry(xts_mts),
+    EnsembleSize=ncol(xts_mts),
+    NumericData=as.matrix(xts_mts)
+  )
+  return(mts)
+}
+
+#' @import xts
+#' @export
+getTsGeometry <- function(xtseries) {
+  stopifnot(xts::is.xts(xtseries))
+  tstamps <- zoo::index(xtseries[1:2,])
+  a <- tstamps[1]
+  b <- tstamps[2]
+  tStep <- as.integer(lubridate::as.duration(lubridate::as.interval(b-a, a)))
+  tsGeom <- createTsGeometry(startTime=start(xtseries), size=nrow(xtseries), tStepSec=tStep)
+  return(tsGeom)
+}
+
+createTsGeometry <- function(startTime, size, tStepSec) {
+  return(new('RegularTimeSeriesGeometry',
+      Start=startTime, # POSIXct
+      Length=size,
+      TimeStepSeconds=tStepSec))
+}

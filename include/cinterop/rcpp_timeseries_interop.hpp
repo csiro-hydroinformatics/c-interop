@@ -15,11 +15,11 @@ using namespace Rcpp;
 #define RCPP_TS_END_NAME "End"
 #define RCPP_TS_LENGTH_NAME "Length"
 #define RCPP_TS_TSTEPSECONDS_NAME "TimeStepSeconds"
-#define RCPP_TS_GEOM_CLASSNAMENAME "SwiftTsGeometry"
+#define RCPP_TS_GEOM_CLASSNAMENAME "RegularTsGeometry"
 #define RCPP_TS_GEOM_SLOTNAME "TsGeom"
 #define RCPP_TS_ENSEMBLESIZE_SLOTNAME "EnsembleSize"
 #define RCPP_TS_NUMERICDATA_SLOTNAME "NumericData"
-#define RCPP_TS_MULTISERIES_CLASSNAME "SwiftMultiTimeSeriesData"
+#define RCPP_TS_MULTISERIES_CLASSNAME "RegularTimeSeries"
 #define RCPP_TS_DATA_ITEMNAME "Data"
 #define RCPP_TS_TIMESTEP_ITEMNAME "TimeStep"
 
