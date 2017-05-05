@@ -138,7 +138,7 @@ namespace cinterop
 		template<>
 		inline Rcpp::NumericVector to_posix_ct_date_time<Rcpp::NumericVector>(const date_time_to_second& mdt)
 		{
-			Rcpp::Function asPOSIXct("mkDate"); // and we need to convert to POSIXct
+			Rcpp::Function asPOSIXct("ISOdate"); // and we need to convert to POSIXct
 			NumericVector result(asPOSIXct(
 				Rcpp::wrap(mdt.year),
 				Rcpp::wrap(mdt.month),
@@ -147,6 +147,7 @@ namespace cinterop
 				Rcpp::wrap(mdt.minute),
 				Rcpp::wrap(mdt.second),
 				CharacterVector("UTC")));
+
 			return result;
 		}
 

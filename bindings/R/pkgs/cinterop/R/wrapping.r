@@ -139,3 +139,15 @@ createTsGeometry <- function(startTime, size, tStepSec) {
       Length=size,
       TimeStepSeconds=tStepSec))
 }
+
+#' @export
+strExternalObjRef <- function(x, ...) {
+  bnbt <- '\n\t'
+  newline <- '\n'
+  if (isExternalObjRef(x)) {
+    cat(paste0('External object of type "', x@type ,'"\n'))
+  } else {
+    str(x)
+  }
+}
+
