@@ -27,7 +27,11 @@ SET(${this_target}_HEADER_FILES
   include/cinterop/c_cpp_interop.hpp
   include/cinterop/c_interop_forward_decl.h
   include/cinterop/common_c_interop.h
+  include/cinterop/object_lifetimes.hpp
   include/cinterop/rcpp_interop.hpp
+  include/cinterop/rcpp_timeseries_interop.hpp
+  include/cinterop/timeseries_c_interop.h
+  include/cinterop/timeseries_interop.hpp
 )
 
 IF (ENABLE_CODECOVERAGE)
