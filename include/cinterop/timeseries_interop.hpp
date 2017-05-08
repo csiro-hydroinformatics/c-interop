@@ -1,13 +1,7 @@
 #pragma once
 
-// Template specialisations for interop with Rcpp
-
-#include <Rcpp.h>
-
 #include "cinterop/timeseries_c_interop.h"
 #include "cinterop/object_lifetimes.hpp"
-
-using namespace Rcpp;
 
 namespace cinterop
 {
