@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma once
-
 #include "cinterop/common_c_interop.h"
 
 typedef struct _regular_time_series_geometry
