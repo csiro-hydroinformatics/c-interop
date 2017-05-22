@@ -55,6 +55,20 @@ namespace cinterop
 				d.numeric_data = nullptr;
 			}
 		}
+
+		template<>
+		inline void dispose_of<time_series_dimensions_description>(time_series_dimensions_description& d)
+		{
+			for (size_t i = 0; i < d.num_dimensions; i++)
+			{
+				auto p = d.dimensions[i];
+				if (p.dimension_name != nullptr)
+				{
+					delete[](p.dimension_name); p.dimension_name = nullptr;
+				}
+			}
+			delete[] (d.dimensions);
+		}
 	}
 
 }

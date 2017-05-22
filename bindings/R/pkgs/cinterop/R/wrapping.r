@@ -89,11 +89,20 @@ updatePathWindows <- function(envVarName='LIBRARY_PATH', libfilename='mylib.dll'
   return(startupMsg)
 }
 
+#' Is an object a cinterop wrapper
+#'
+#' Is an object a cinterop wrapper, and if so of a specified type
+#'
+#' @param x The object to check: is it an ExternalObjRef
+#' @param type optional, the exact type of the ExternalObjRef to expect
+#' @return a logical value
 #' @export
 isExternalObjRef <- function(x, type) {
   result <- is(x, 'ExternalObjRef')
   if(result) {
     if(!missing(type)) {
+      if(!is.character(type)) {stop('isExternalObjRef: type to check must be a character')}
+      if(length(type)==1) {stop('isExternalObjRef: arg type must be a character of of length 1')}
       result <- (result && x@type == type)
     }
   }
