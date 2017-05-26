@@ -11,6 +11,8 @@
 using std::vector;
 using std::string;
 
+using namespace boost::posix_time;
+
 namespace cinterop
 {
 	namespace utils
