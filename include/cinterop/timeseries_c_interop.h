@@ -18,7 +18,7 @@ typedef struct _multi_regular_time_series_data
 
 typedef struct _time_series_dimension_description
 {
-	char* dimension_name;
+	char* dimension_type;
 	size_t size;
 } time_series_dimension_description;
 

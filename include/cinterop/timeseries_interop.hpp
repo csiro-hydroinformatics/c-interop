@@ -62,9 +62,9 @@ namespace cinterop
 			for (size_t i = 0; i < d.num_dimensions; i++)
 			{
 				auto p = d.dimensions[i];
-				if (p.dimension_name != nullptr)
+				if (p.dimension_type != nullptr)
 				{
-					delete[](p.dimension_name); p.dimension_name = nullptr;
+					delete[](p.dimension_type); p.dimension_type = nullptr;
 				}
 			}
 			delete[] (d.dimensions);

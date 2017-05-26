@@ -43,6 +43,12 @@ namespace cinterop
 		template<typename N>
 		N to_custom_numeric_vector(double* values, int length, bool cleanup);
 
+		template<typename date_int_type = uint32_t>
+		ptime as_ptime(date_int_type year, date_int_type month, date_int_type day, date_int_type hour = 0, date_int_type minute = 0, date_int_type second = 0)
+		{
+			return ptime(date(year, month, day), hours(hour) + minutes(minute) + seconds(second));
+		}
+
 		template<typename T>
 		date_time_to_second to_date_time_to_second(const T& dt);
 
