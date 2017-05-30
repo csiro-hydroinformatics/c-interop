@@ -21,6 +21,7 @@ mkExternalObjRef <- function(obj, type='') {
 #' @param objRef the presumed ExternalObjRef to unwrap
 #' @param stringent if TRUE, an error is raised if objRef is neither an  ExternalObjRef nor an externalptr.
 #' @return an externalptr, or the input objRef unchanged if objRef is neither an  ExternalObjRef nor an externalptr and not in stringent mode
+#' @import methods
 #' @export
 getExternalXptr <- function(objRef, stringent=FALSE) {
   # 2016-01-28 allowing null pointers, to unlock behavior of EstimateERRISParameters. 
@@ -30,7 +31,7 @@ getExternalXptr <- function(objRef, stringent=FALSE) {
   }
   if (is(objRef, 'ExternalObjRef')) {
     return(objRef@obj)
-  } else if (is(objRef, 'externalptr')) {
+  } else if (methods::is(objRef, 'externalptr')) {
     return(objRef)
   } else {
     if(stringent) {
@@ -45,6 +46,15 @@ appendStartupMsg <- function(msg, prior) {
   return(paste0(prior, msg, '\n'))
 }
 
+#' Update the PATH env var on windows, to locate an appropriate DLL dependency.
+#' 
+#' Update the PATH env var on windows. This is a function meant to be used by packages' '.onLoad' functions. 
+#' Looks in another env var, then depending on whether the current process is 32 or 64 bits build a path and looks for a specified DLL. 
+#' 
+#' @param envVarName the environment variable to look for a root for architecture dependent libraries. 
+#' @param libfilename name of the DLL sought and that should be present in the architecture (32/64) subfolder.
+#' @import stringr
+#' @return a character vector, the startup message string resulting from the update process.
 #' @export
 updatePathWindows <- function(envVarName='LIBRARY_PATH', libfilename='mylib.dll') {
   startupMsg <- ''
@@ -109,6 +119,13 @@ isExternalObjRef <- function(x, type) {
   return(result)
 }
 
+#' Build an error message that an unexpected object is in lieu of an expected cinterop external ref object.
+#'
+#' Build an error message that an unexpected object is in lieu of an expected cinterop external ref object.
+#'
+#' @param x actual object that is not of the expected type or underlying type for the external pointer.
+#' @param expectedType expected underlying type for the ExternalObj
+#' @return a character, the error message
 #' @export
 argErrorExternalObjType <- function(x, expectedType) {
   if(!isExternalObjRef(x)) {
@@ -118,7 +135,13 @@ argErrorExternalObjType <- function(x, expectedType) {
   }
 }
 
+#' Convert an xts object to a cinterop RegularTimeSeries object to be passed to a C API
+#'
+#' Convert an xts object to a cinterop RegularTimeSeries object to be passed to a C API
+#'
+#' @param xts_mts the uni- or multi-variate xts time series
 #' @import xts
+#' @return an object of class "RegularTimeSeries"
 #' @export
 asInteropRegularTimeSeries <- function(xts_mts) {
   stopifnot(xts::is.xts(xts_mts))
@@ -130,7 +153,16 @@ asInteropRegularTimeSeries <- function(xts_mts) {
   return(mts)
 }
 
+#' Gets the time series geometry of an xts, to be passed to a C API
+#'
+#' Gets the time series geometry of an xts, to be passed to a C API
+#'
+#' @param xtseries the uni- or multi-variate xts time series
 #' @import xts
+#' @import stats
+#' @import zoo
+#' @import lubridate
+#' @return an S4 object of class 'RegularTimeSeriesGeometry'
 #' @export
 getTsGeometry <- function(xtseries) {
   stopifnot(xts::is.xts(xtseries))
@@ -138,7 +170,7 @@ getTsGeometry <- function(xtseries) {
   a <- tstamps[1]
   b <- tstamps[2]
   tStep <- as.integer(lubridate::as.duration(lubridate::as.interval(b-a, a)))
-  tsGeom <- createTsGeometry(startTime=start(xtseries), size=nrow(xtseries), tStepSec=tStep)
+  tsGeom <- createTsGeometry(startTime=stats::start(xtseries), size=nrow(xtseries), tStepSec=tStep)
   return(tsGeom)
 }
 
@@ -149,6 +181,13 @@ createTsGeometry <- function(startTime, size, tStepSec) {
       TimeStepSeconds=tStepSec))
 }
 
+#' A suitable method implementation for 'str', for cinterop ExternalObjRef objects
+#'
+#' A suitable method implementation for 'str', for cinterop ExternalObjRef objects
+#'
+#' @import utils
+#' @param x an object expected to be an S4 'ExternalObjRef'
+#' @param ... potential further arguments (required for Method/Generic reasons).
 #' @export
 strExternalObjRef <- function(x, ...) {
   bnbt <- '\n\t'
@@ -156,7 +195,7 @@ strExternalObjRef <- function(x, ...) {
   if (isExternalObjRef(x)) {
     cat(paste0('External object of type "', x@type ,'"\n'))
   } else {
-    str(x)
+    utils::str(x)
   }
 }
 
