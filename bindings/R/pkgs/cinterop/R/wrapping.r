@@ -111,8 +111,8 @@ isExternalObjRef <- function(x, type) {
   result <- is(x, 'ExternalObjRef')
   if(result) {
     if(!missing(type)) {
-      if(!is.character(type)) {stop('isExternalObjRef: type to check must be a character')}
-      if(length(type)==1) {stop('isExternalObjRef: arg type must be a character of of length 1')}
+      if(!is.character(type)) {stop('isExternalObjRef: the expected type to check must be a character')}
+      if(length(type)!=1) {stop('isExternalObjRef: the expected type must be a character of length 1')}
       result <- (result && x@type == type)
     }
   }
