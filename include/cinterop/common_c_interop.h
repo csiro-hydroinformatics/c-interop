@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef> // size_t
+
 #ifndef STRDUP
 #ifdef _WIN32
 #define STRDUP _strdup
