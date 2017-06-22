@@ -5,9 +5,9 @@
 #' \tabular{ll}{
 #' Package: \tab cinterop \cr
 #' Type: \tab Package\cr
-#' Version: \tab 0.2-2 \cr
-#' Date: \tab 2017-05-30 \cr
-#' Release Notes: \tab First package version used for other released packages \cr
+#' Version: \tab 0.2-3 \cr
+#' Date: \tab 2017-06-22 \cr
+#' Release Notes: \tab Bump up revision number to disambiguate possible issue with 0.2-2 when calling cinterop::isExternalRef \cr
 #' License: \tab LGPL-3 \cr
 #' }
 #'
