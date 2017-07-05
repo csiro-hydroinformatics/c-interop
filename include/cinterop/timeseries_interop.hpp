@@ -49,9 +49,10 @@ namespace cinterop
 				for (int i = 0; i < d.ensemble_size; i++)
 					if (d.numeric_data[i] != nullptr)
 					{
-						delete d.numeric_data[i];
+						delete[] d.numeric_data[i];
 						d.numeric_data[i] = nullptr;
 					}
+				delete[] d.numeric_data;
 				d.numeric_data = nullptr;
 			}
 		}
@@ -64,7 +65,8 @@ namespace cinterop
 				auto p = d.dimensions[i];
 				if (p.dimension_type != nullptr)
 				{
-					delete[](p.dimension_type); p.dimension_type = nullptr;
+					delete[](p.dimension_type); 
+					p.dimension_type = nullptr;
 				}
 			}
 			delete[] (d.dimensions);
