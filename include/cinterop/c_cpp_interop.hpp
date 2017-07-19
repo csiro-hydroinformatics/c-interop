@@ -5,8 +5,9 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "common_c_interop.h"
-#include "c_interop_forward_decl.h"
+#include "cinterop/common_c_interop.h"
+#include "cinterop/c_interop_forward_decl.h"
+#include "cinterop/object_lifetimes.hpp"
 
 using std::vector;
 using std::string;
@@ -29,9 +30,6 @@ namespace cinterop
 
 		template<typename F>
 		F* to_c_array(const std::vector<F>& dblvec);
-
-		template<typename F>
-		void free_c_array(F* values, int arrayLength);
 
 		template<typename F>
 		double** to_double_ptr_array(const F& mat);
@@ -74,20 +72,19 @@ namespace cinterop
 			return cArray;
 		}
 
-		//char* ToCStr(const string& s);
+		template<typename T>
+		named_values_vector to_named_values_vector(const T& x);
+
+		template<typename T, typename K, typename V>
+		std::map<K, V> to_map(const T& x);
+
+		template<typename T, typename K, typename V>
+		void to_columns(const T& x, std::vector<K>& k, std::vector<V>& v);
 
 		template<typename T = double>
 		T Identity(const T& x)
 		{
 			return x;
-		}
-
-		template<typename F = double>
-		void free_c_ptr_array(F** values, int arrayLength)
-		{
-			for (int i = 0; i < arrayLength; i++)
-				delete[] values[i];
-			delete[] values;
 		}
 
 		template<typename S = string>
@@ -135,6 +132,14 @@ namespace cinterop
 			tt.second = t.seconds();
 		}
 
+
+		/*
+		// C interop Template specialisations for STL classes and common types
+		*/
+
+		/**
+		 * \brief	interop template specialization for boost ptime
+		 */
 		template<>
 		inline date_time_to_second to_date_time_to_second<ptime>(const ptime& dt)
 		{
@@ -142,8 +147,6 @@ namespace cinterop
 			to_date_time_to_second(dt, tt);
 			return tt;
 		}
-
-		// C interop Template specialisations for STL classes and common types
 
 		template<>
 		inline char* to_ansi_string<string>(const string& s)
@@ -169,16 +172,10 @@ namespace cinterop
 		template<>
 		inline double* to_c_array<double>(const std::vector<double>& dblvec)
 		{
-			int n = dblvec.size();
+			size_t n = dblvec.size();
 			auto numArray = new double[n];
 			std::copy(dblvec.begin(), dblvec.begin() + n, numArray);
 			return numArray;
-		}
-
-		template<>
-		inline void free_c_array<double>(double* values, int arrayLength)
-		{
-			delete values;
 		}
 
 		template<>
@@ -192,5 +189,65 @@ namespace cinterop
 			return result;
 		}
 
+		template<>
+		inline named_values_vector to_named_values_vector<std::map<string, double>>(const std::map<string, double>& x)
+		{
+			named_values_vector y;
+			y.size = x.size();
+			y.names = new char*[y.size];
+			y.values = new double[y.size];
+
+			size_t i = 0;
+			for (const auto& kv : x)
+			{
+				y.names[i] = to_ansi_string(kv.first);
+				y.values[i] = kv.second;
+				i++;
+			}
+			return y;
+		}
+
+		template<>
+		inline std::map<string, double> to_map<named_values_vector,string,double>(const named_values_vector& x)
+		{
+			std::map<string, double> y;
+			for (size_t i = 0; i < x.size; i++)
+				y[string(x.names[i])] = x.values[i];
+			return y;
+		}
+
+		template<>
+		inline void to_columns<named_values_vector, string, double>(
+			const named_values_vector& x, 
+			std::vector<string>& k, 
+			std::vector<double>& v)
+		{
+			k.resize(x.size);
+			v.resize(x.size);
+			for (size_t i = 0; i < x.size; i++)
+			{
+				k[i] = x.names[i];
+				v[i] = x.values[i];
+			}
+		}
+	}
+
+	namespace disposal {
+		template<>
+		inline void dispose_of<named_values_vector>(named_values_vector& d)
+		{
+
+			if (d.names != nullptr)
+			{
+				free_c_ptr_array<char>(d.names, d.size);
+				d.names = nullptr;
+			}
+
+			if (d.values != nullptr)
+			{
+				delete[] d.values;
+				d.values = nullptr;
+			}
+		}
 	}
 }
