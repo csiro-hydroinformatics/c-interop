@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstddef> // size_t
+#include <cstddef> // otherwise you may get "error: 'size_t' does not name a type" with gcc (at least compiling R pkgs)
 
 #ifndef STRDUP
 #ifdef _WIN32
