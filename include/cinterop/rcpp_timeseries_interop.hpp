@@ -57,7 +57,7 @@ namespace cinterop
 		}
 
 		template<>
-		Rcpp::S4 from_regular_time_series_geometry<Rcpp::S4>(const regular_time_series_geometry& mts)
+		inline Rcpp::S4 from_regular_time_series_geometry<Rcpp::S4>(const regular_time_series_geometry& mts)
 		{
 			Rcpp::S4 rTsInfo(RCPP_TS_GEOM_CLASSNAMENAME);
 			rTsInfo.slot(RCPP_TS_START_NAME) = cinterop::utils::to_posix_ct_date_time<NumericVector>(mts.start);
@@ -70,7 +70,7 @@ namespace cinterop
 
 
 		template<>
-		multi_regular_time_series_data to_multi_regular_time_series_data<Rcpp::S4>(const Rcpp::S4& timeSeriesEnsemble)
+		inline multi_regular_time_series_data to_multi_regular_time_series_data<Rcpp::S4>(const Rcpp::S4& timeSeriesEnsemble)
 		{
 			multi_regular_time_series_data result;
 
@@ -85,7 +85,7 @@ namespace cinterop
 
 
 		template<>
-		Rcpp::S4 from_multi_regular_time_series_data<Rcpp::S4>(const multi_regular_time_series_data& mts)
+		inline Rcpp::S4 from_multi_regular_time_series_data<Rcpp::S4>(const multi_regular_time_series_data& mts)
 		{
 			Rcpp::S4 timeSeriesEnsemble(RCPP_TS_MULTISERIES_CLASSNAME);
 			timeSeriesEnsemble.slot(RCPP_TS_GEOM_SLOTNAME) = from_regular_time_series_geometry<Rcpp::S4>(mts.time_series_geometry);
