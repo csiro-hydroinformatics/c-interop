@@ -2,9 +2,12 @@
 
 export(argErrorExternalObjType)
 export(asInteropRegularTimeSeries)
+export(asXtsTimeSeries)
 export(getExternalXptr)
 export(getTsGeometry)
 export(isExternalObjRef)
+export(isInteropRegularTimeSeries)
+export(makeTimeAxis)
 export(mkExternalObjRef)
 export(strExternalObjRef)
 export(updatePathWindows)

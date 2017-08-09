@@ -12,6 +12,7 @@
 using std::vector;
 using std::string;
 
+using namespace boost::gregorian;
 using namespace boost::posix_time;
 
 namespace cinterop
@@ -44,9 +45,11 @@ namespace cinterop
 		N to_custom_numeric_vector(double* values, int length, bool cleanup);
 
 		template<typename date_int_type = uint32_t>
-		ptime as_ptime(date_int_type year, date_int_type month, date_int_type day, date_int_type hour = 0, date_int_type minute = 0, date_int_type second = 0)
+		boost::posix_time::ptime as_ptime(date_int_type year, date_int_type month, date_int_type day, date_int_type hour = 0, date_int_type minute = 0, date_int_type second = 0)
 		{
-			return ptime(date(year, month, day), hours(hour) + minutes(minute) + seconds(second));
+			date d(year, month, day);
+			time_duration td = hours(hour) + minutes(minute) + seconds(second);
+			return ptime(d, td);
 		}
 
 		template<typename T>
@@ -146,6 +149,12 @@ namespace cinterop
 			date_time_to_second tt;
 			to_date_time_to_second(dt, tt);
 			return tt;
+		}
+
+		template<>
+		inline ptime from_date_time_to_second<ptime>(const date_time_to_second& dt)
+		{
+			return as_ptime<int>(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
 		}
 
 		template<>
