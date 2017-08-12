@@ -34,15 +34,23 @@ namespace cinterop
 		template<>
 		inline NumericMatrix to_r_numeric_matrix<multi_regular_time_series_data>(const multi_regular_time_series_data& mts)
 		{
-			size_t length = mts.time_series_geometry.length;
 			size_t ensSize = mts.ensemble_size;
-			NumericMatrix m(mts.time_series_geometry.length /*nrows*/, mts.ensemble_size /*ncols*/);
-			for (size_t i = 0; i < ensSize; i++)
+			if (mts.ensemble_size > 0) // NOT ensSize!
 			{
-				NumericVector values = cinterop::utils::to_custom_numeric_vector<NumericVector>(mts.numeric_data[i], length, false);
-				m(_, i) = values;
+				size_t length = mts.time_series_geometry.length;
+				NumericMatrix m(mts.time_series_geometry.length /*nrows*/, mts.ensemble_size /*ncols*/);
+				for (size_t i = 0; i < ensSize; i++)
+				{
+					NumericVector values = cinterop::utils::to_custom_numeric_vector<NumericVector>(mts.numeric_data[i], length, false);
+					m(_, i) = values;
+				}
+				return m;
 			}
-			return m;
+			else {
+				NumericMatrix m(1, 1);
+				m(0,0) = NumericMatrix::get_na();
+				return m;
+			}
 		}
 	}
 

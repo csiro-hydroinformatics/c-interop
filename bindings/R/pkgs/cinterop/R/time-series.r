@@ -43,6 +43,7 @@ isInteropRegularTimeSeries <- function(tsInfo) {
 #' @export
 asXtsTimeSeries <- function(tsInfo) {
   stopifnot(isInteropRegularTimeSeries(tsInfo))
+  if(tsInfo@EnsembleSize < 1) return(as.numeric(NA))
   xts::xts(tsInfo@NumericData, makeTimeAxis(tsInfo@TsGeom))
 }
 
