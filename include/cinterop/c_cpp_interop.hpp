@@ -75,6 +75,14 @@ namespace cinterop
 			return cArray;
 		}
 
+		template<typename T = double>
+		T* vector_identity_to_c_array(const vector<T>& values)
+		{
+			int* size = nullptr;
+			auto identity = [](T x) {return x; };
+			return cinterop::utils::vector_to_c_array<T, T>(values, identity, size);
+		}
+
 		template<typename T>
 		named_values_vector to_named_values_vector(const T& x);
 
