@@ -2,7 +2,7 @@
 
 // Template specialisations for interop with Rcpp
 
-#include <Rcpp.h>
+#include "rcpp_strict_r_headers.hpp"
 
 #include "common_c_interop.h"
 #include "c_interop_forward_decl.h"
@@ -31,24 +31,6 @@ namespace cinterop
 				res[i] = STRDUP(as<std::string>(charVec[i]).c_str());
 			return res;
 		}
-
-		//template<typename T>
-		//void free_jagged_array(T** values, int arrayLength)
-		//{
-		//	for (int i = 0; i < arrayLength; i++)
-		//		delete[] values[i];
-		//	delete[] values;
-		//}
-
-		//void free_ansi_char_array(char ** values, int arrayLength)
-		//{
-		//	free_jagged_array<char>(values, arrayLength);
-		//}
-
-		//void free_double_ptr_array(double** values, int arrayLength)
-		//{
-		//	free_jagged_array<double>(values, arrayLength);
-		//}
 
 		template<typename M>
 		double** as_double_ptr_array(M& mat);

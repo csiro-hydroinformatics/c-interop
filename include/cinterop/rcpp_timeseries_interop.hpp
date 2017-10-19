@@ -2,7 +2,7 @@
 
 // Template specialisations for interop with Rcpp
 
-#include <Rcpp.h>
+#include <cinterop/rcpp_strict_r_headers.hpp>
 
 #include "cinterop/c_interop_forward_decl.h"
 #include "cinterop/timeseries_c_interop.h"
