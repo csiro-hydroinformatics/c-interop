@@ -7,4 +7,3 @@
 \description{
 Class \code{RegularTimeSeries} is a simplified structure for multivariate regular series, readier for interop with a C API.
 }
-

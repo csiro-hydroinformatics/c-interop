@@ -15,4 +15,3 @@ an S4 object of class 'RegularTimeSeriesGeometry'
 \description{
 Gets the time series geometry of an xts, to be passed to a C API
 }
-

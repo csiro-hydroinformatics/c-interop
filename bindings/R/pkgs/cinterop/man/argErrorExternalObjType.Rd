@@ -17,4 +17,3 @@ a character, the error message
 \description{
 Build an error message that an unexpected object is in lieu of an expected cinterop external ref object.
 }
-

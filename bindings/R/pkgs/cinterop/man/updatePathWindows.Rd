@@ -18,4 +18,3 @@ a character vector, the startup message string resulting from the update process
 Update the PATH env var on windows. This is a function meant to be used by packages' '.onLoad' functions. 
 Looks in another env var, then depending on whether the current process is 32 or 64 bits build a path and looks for a specified DLL.
 }
-

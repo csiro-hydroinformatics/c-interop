@@ -15,4 +15,3 @@ an object of class "RegularTimeSeries"
 \description{
 Convert an xts object to a cinterop RegularTimeSeries object to be passed to a C API
 }
-

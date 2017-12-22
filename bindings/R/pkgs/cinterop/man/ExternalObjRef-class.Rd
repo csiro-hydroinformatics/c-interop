@@ -7,4 +7,3 @@
 \description{
 Class \code{ExternalObjRef} defines a class that is used to hold references to external objects accessed via opaque, external pointers.
 }
-

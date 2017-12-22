@@ -17,4 +17,3 @@ a logical value
 \description{
 Is an object a cinterop wrapper, and if so of a specified type
 }
-

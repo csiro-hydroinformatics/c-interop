@@ -17,4 +17,3 @@ an ExternalObjRef if the input is an externalptr, or 'obj' otherwise.
 \description{
 Create a wrapper around an externalptr
 }
-

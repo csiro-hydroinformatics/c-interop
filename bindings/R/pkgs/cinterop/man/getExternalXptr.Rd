@@ -17,4 +17,3 @@ an externalptr, or the input objRef unchanged if objRef is neither an  ExternalO
 \description{
 Gets an externalptr wrapped in an ExternalObjRef
 }
-

@@ -12,4 +12,3 @@ isInteropRegularTimeSeries(tsInfo)
 \description{
 Is the object a cinterop RegularTimeSeries object to be passed to a C API
 }
-

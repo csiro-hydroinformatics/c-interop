@@ -7,4 +7,3 @@
 \description{
 Class \code{RegularTimeSeriesGeometry} defines a class defining the geometry of time series with a time step identical for every step.
 }
-

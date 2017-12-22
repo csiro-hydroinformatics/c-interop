@@ -12,4 +12,3 @@ makeTimeAxis(tsGeom)
 \description{
 Creates an R posixCT time axis for use in e.g. xts indexing
 }
-

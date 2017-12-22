@@ -14,4 +14,3 @@ strExternalObjRef(x, ...)
 \description{
 A suitable method implementation for 'str', for cinterop ExternalObjRef objects
 }
-

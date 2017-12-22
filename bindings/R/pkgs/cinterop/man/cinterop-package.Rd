@@ -2,8 +2,8 @@
 % Please edit documentation in R/cinterop-package.r
 \docType{package}
 \name{cinterop-package}
-\alias{cinterop}
 \alias{cinterop-package}
+\alias{cinterop}
 \title{Reusable constructs for interop with opaque pointers in a C API}
 \description{
 Reusable constructs for interop with opaque pointers in a C API
@@ -28,4 +28,3 @@ Jean-Michel Perraud \email{jean-michel.perraud_at_csiro.au}
 \keyword{C,}
 \keyword{external}
 \keyword{pointers}
-
