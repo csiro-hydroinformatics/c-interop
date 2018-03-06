@@ -61,13 +61,13 @@ namespace cinterop
 		template<typename T = double, typename U = double>
 		U* vector_to_c_array(const vector<T>& values, std::function<U(const T&)> converter, int* size = nullptr)
 		{
-			int n = values.size();
+			size_t n = values.size();
 			if (size != nullptr)
-				*size = n;
+				*size = static_cast<int>(n);
 			if (n == 0)
 				return nullptr;
 			U* cArray = new U[n];
-			for (int i = 0; i < n; i++)
+			for (size_t i = 0; i < n; i++)
 			{
 				U c = converter(values[i]);
 				cArray[i] = c;
