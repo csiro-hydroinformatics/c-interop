@@ -116,7 +116,7 @@ namespace cinterop
 			IntegerVector tStep(1, mtsg.time_step_seconds);
 			CharacterVector tzone(time_zone);
 			return Rcpp::List::create(
-				Rcpp::Named(RCPP_TS_START_NAME) = cinterop::utils::from_date_time_to_second<Rcpp::Datetime>(mtsg.start),
+				Rcpp::Named(RCPP_TS_START_NAME) = cinterop::utils::to_posix_ct_date_time<Rcpp::NumericVector>(mtsg.start),
 				Rcpp::Named("tzone") = tzone,
 				Rcpp::Named(RCPP_TS_DATA_ITEMNAME) = data,
 				Rcpp::Named(RCPP_TS_TIMESTEP_ITEMNAME) = tStep);

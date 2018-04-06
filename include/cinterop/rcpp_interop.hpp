@@ -88,6 +88,9 @@ namespace cinterop
 		template<>
 		inline date_time_to_second to_date_time_to_second<Rcpp::Datetime>(const Rcpp::Datetime& dt)
 		{
+			// Datetime stores its values as UTC, so the following is adequate. 
+			// The inverst transform requires more care as to which Datetime
+			// constructor to use
 			date_time_to_second d;
 			d.year = dt.getYear();
 			d.month = dt.getMonth();
@@ -96,22 +99,6 @@ namespace cinterop
 			d.minute = dt.getMinutes();
 			d.second = dt.getSeconds();
 			return d;
-		}
-
-		template<>
-		inline Rcpp::Datetime from_date_time_to_second<Rcpp::Datetime>(const date_time_to_second& dt)
-		{
-			char sf[200];
-			// const std::string &fmt = "%Y-%m-%d %H:%M:%OS");
-			std::sprintf(sf, "%d-%d-%d %d:%d:%d",
-				dt.year,
-				dt.month,
-				dt.day,
-				dt.hour,
-				dt.minute,
-				dt.second);
-			auto res = Datetime(sf);
-			return res;
 		}
 
 		template<typename T>
@@ -133,7 +120,14 @@ namespace cinterop
 			return result;
 		}
 
-
+		template<>
+		inline Rcpp::Datetime from_date_time_to_second<Rcpp::Datetime>(const date_time_to_second& dt)
+		{
+			//Datetime(string) seems to assume the input is in locals time 
+			//	and there is no way to specify another time zone. This is bug prone, so let
+			//	 us instead use to_posix_ct_date_time which is explicit with UTC
+			return Datetime(to_posix_ct_date_time<Rcpp::NumericVector>(dt));
+		}
 	}
 #define S4_EXTERNAL_OBJ_CLASSNAME "ExternalObjRef"
 #define S4_OBJ_SLOTNAME "obj"
