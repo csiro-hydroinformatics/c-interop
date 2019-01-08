@@ -1,7 +1,10 @@
 #pragma once
 
+/* C-API interoperable representation of time series */
+
 #include "cinterop/common_c_interop.h"
 
+/** \brief	C-struct interop information describing the geometry of a time series with regular (fixed temporal period) time steps */
 typedef struct _regular_time_series_geometry
 {
 	date_time_to_second start;
@@ -9,6 +12,7 @@ typedef struct _regular_time_series_geometry
 	int length;
 } regular_time_series_geometry;
 
+/** \brief	C-struct interop information defining a multivariate time series with regular (fixed temporal period) time steps */
 typedef struct _multi_regular_time_series_data
 {
 	regular_time_series_geometry time_series_geometry;

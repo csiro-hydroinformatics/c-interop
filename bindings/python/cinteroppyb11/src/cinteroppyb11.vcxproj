@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{BA96B47F-E1A5-48FB-BB54-47CC09645E03}</ProjectGuid>
+    <RootNamespace>uchronia</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup>
+    <Import Project="$(UserRootDir)/Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)/Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(UserProfile)/vcpp_config.props" Condition="exists('$(UserProfile)/vcpp_config.props')" />
+    <Import Project="./r_program.props" Condition="exists('./r_program.props')" />
+  </ImportGroup>
+  <PropertyGroup>
+    <!-- Jan 2019 adding hard coded path to pybind11 headers -->
+    <IncludePath>../inst/include;C:/Users/per202/AppData/Local/Continuum/anaconda3/envs/uchronia/include;C:/Users/per202/AppData/Local/Continuum/anaconda3/envs/uchronia/Library/include;$(RcppPkgPath)/include;$(RInstallPath)/include;$(WindowsSDK_IncludePath);$(VC_IncludePath);$(LocalIncludePaths);$(IncludePath)</IncludePath>
+    <LibraryPath>C:/Users/per202/AppData/Local/Continuum/anaconda3/envs/uchronia/libs;$(LocalLibraryPaths);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>RPP_USE_OPAQUE_POINTERS;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>$(UseDebugLibraries)</GenerateDebugInformation>
+      <AdditionalDependencies>datatypes.lib;moirai.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>cinteroppyb11.def</ModuleDefinitionFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <!--<ClInclude Include="../inst/include/swift_wrapper_setup.h" />-->
+    <!-- <ClInclude Include="../inst/include/cinteroppyb11_exports.h" />
+    <ClInclude Include="../inst/include/uchronia_wrapper_setup.h" />
+    <ClInclude Include="../inst/include/uchronia.h" />
+    <ClInclude Include="..\inst\include\rcpp_uchronia.h" /> -->
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

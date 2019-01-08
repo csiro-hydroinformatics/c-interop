@@ -10,6 +10,7 @@
 #endif
 #endif // !STRDUP
 
+/** \brief	C-struct interop information for time stamps to a resolution of one second */
 typedef struct _date_time_to_second
 {
 	int year;
