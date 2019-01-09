@@ -1,4 +1,4 @@
-python_example Documentation
+cinteroppyb11 Documentation
 ============================
 
 Contents:
@@ -6,5 +6,5 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   python_example
+   cinteroppyb11
 
