@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <map>
 #include <functional>
 
 #include "cinterop/common_c_interop.h"
@@ -9,6 +10,7 @@
 
 using std::vector;
 using std::string;
+using std::map;
 
 namespace cinterop
 {
