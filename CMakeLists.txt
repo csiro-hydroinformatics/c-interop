@@ -24,6 +24,7 @@ SET (${this_target}_SOURCE_FILES
 
 
 SET(${this_target}_HEADER_FILES
+  include/cinterop/c_boost_posix_time_interop.hpp
   include/cinterop/c_cpp_interop.hpp
   include/cinterop/c_interop_forward_decl.h
   include/cinterop/common_c_interop.h
