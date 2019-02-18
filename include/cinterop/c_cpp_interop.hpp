@@ -75,6 +75,22 @@ namespace cinterop
 		template<typename T>
 		named_values_vector to_named_values_vector(const T& x);
 
+		template<typename T=double> // hack to be header-only
+		named_values_vector create_named_values_vector(const std::vector<std::string>& names, const std::vector<T>& values)
+		{
+			size_t n = names.size();
+			named_values_vector vv;
+			vv.size = n;
+			vv.names = new char*[n];
+			vv.values = new T[n];
+			for (size_t i = 0; i < n; i++)
+			{
+				vv.names[i] = STRDUP(names[i].c_str());
+				vv.values[i] = values[i];
+			}
+			return vv;
+		}
+
 		template<typename T, typename K, typename V>
 		std::map<K, V> to_map(const T& x);
 
