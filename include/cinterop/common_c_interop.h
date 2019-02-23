@@ -36,3 +36,10 @@ typedef struct _named_values_vector
 	char** names;
 } named_values_vector;
 
+typedef struct _string_string_map
+{
+	size_t size;
+	char** keys;
+	char** values;
+} string_string_map;
+

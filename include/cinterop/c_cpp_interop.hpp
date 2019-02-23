@@ -75,7 +75,7 @@ namespace cinterop
 		template<typename T>
 		named_values_vector to_named_values_vector(const T& x);
 
-		template<typename T=double> // hack to be header-only
+		template<typename T = double> // hack to be header-only
 		named_values_vector create_named_values_vector(const std::vector<std::string>& names, const std::vector<T>& values)
 		{
 			size_t n = names.size();
@@ -87,6 +87,25 @@ namespace cinterop
 			{
 				vv.names[i] = STRDUP(names[i].c_str());
 				vv.values[i] = values[i];
+			}
+			return vv;
+		}
+
+		template<typename T>
+		string_string_map to_string_string_map(const T& x);
+
+		template<typename T = std::string> // hack to be header-only
+		string_string_map create_string_string_map(const std::vector<std::string>& names, const std::vector<T>& values)
+		{
+			size_t n = names.size();
+			string_string_map vv;
+			vv.size = n;
+			vv.keys = new char*[n];
+			vv.values = new char*[n];
+			for (size_t i = 0; i < n; i++)
+			{
+				vv.keys[i] = STRDUP(names[i].c_str());
+				vv.values[i] = STRDUP(values[i].c_str());
 			}
 			return vv;
 		}
@@ -187,11 +206,39 @@ namespace cinterop
 		}
 
 		template<>
+		inline string_string_map to_string_string_map<std::map<string, string>>(const std::map<string, string>& x)
+		{
+			string_string_map y;
+			y.size = x.size();
+			y.keys = new char*[y.size];
+			y.values = new char*[y.size];
+
+			size_t i = 0;
+			for (const auto& kv : x)
+			{
+				y.keys[i] = to_ansi_string(kv.first);
+				y.values[i] = to_ansi_string(kv.second);
+				i++;
+			}
+			return y;
+		}
+
+
+		template<>
 		inline std::map<string, double> to_map<named_values_vector,string,double>(const named_values_vector& x)
 		{
 			std::map<string, double> y;
 			for (size_t i = 0; i < x.size; i++)
 				y[string(x.names[i])] = x.values[i];
+			return y;
+		}
+
+		template<>
+		inline std::map<string, string> to_map<string_string_map, string, string>(const string_string_map& x)
+		{
+			std::map<string, string> y;
+			for (size_t i = 0; i < x.size; i++)
+				y[string(x.keys[i])] = x.values[i];
 			return y;
 		}
 
@@ -206,6 +253,21 @@ namespace cinterop
 			for (size_t i = 0; i < x.size; i++)
 			{
 				k[i] = x.names[i];
+				v[i] = x.values[i];
+			}
+		}
+
+		template<>
+		inline void to_columns<string_string_map, string, string>(
+			const string_string_map& x,
+			std::vector<string>& k,
+			std::vector<string>& v)
+		{
+			k.resize(x.size);
+			v.resize(x.size);
+			for (size_t i = 0; i < x.size; i++)
+			{
+				k[i] = x.keys[i];
 				v[i] = x.values[i];
 			}
 		}
@@ -225,6 +287,23 @@ namespace cinterop
 			if (d.values != nullptr)
 			{
 				delete[] d.values;
+				d.values = nullptr;
+			}
+		}
+
+		template<>
+		inline void dispose_of<string_string_map>(string_string_map& d)
+		{
+
+			if (d.keys != nullptr)
+			{
+				free_c_ptr_array<char>(d.keys, d.size);
+				d.keys = nullptr;
+			}
+
+			if (d.values != nullptr)
+			{
+				free_c_ptr_array<char>(d.values, d.size);
 				d.values = nullptr;
 			}
 		}
