@@ -57,10 +57,10 @@ setMethod("initialize", "RegularTimeSeriesGeometry",
     })
 
 setMethod("initialize", "RegularTimeSeries",
-          function(.Object, tsGeom = createDefaultTsGeometry(), ensSize = 0L, numericData = as.matrix(numeric()), ...) {
+          function(.Object, TsGeom = createDefaultTsGeometry(), EnsembleSize = 0L, NumericData = as.matrix(numeric()), ...) {
               .Object <- callNextMethod(.Object, ...)
-              .Object@TsGeom <- tsGeom
-              .Object@EnsembleSize <- ensSize
-              .Object@NumericData <- numericData
+              .Object@TsGeom <- TsGeom
+              .Object@EnsembleSize <- EnsembleSize
+              .Object@NumericData <- NumericData
               .Object
           })
