@@ -32,4 +32,26 @@ typedef struct _time_series_dimensions_description
 	int num_dimensions;
 } time_series_dimensions_description;
 
+typedef struct _statistic_definition
+{
+	char* model_variable_id;
+	char* objective_identifier;
+	char* objective_name;
+	char* statistic_identifier;
+	date_time_to_second start;
+	date_time_to_second end;
+	multi_regular_time_series_data* observations;
+} statistic_definition;
+
+typedef struct _multi_statistic_definition
+{
+	int size;
+	statistic_definition** statistics;
+} multi_statistic_definition;
+
+typedef struct _mixing_statistics // very draft needs detailed use case.
+{
+	char* mix_statistics_id;
+} mixing_statistics;
+
 

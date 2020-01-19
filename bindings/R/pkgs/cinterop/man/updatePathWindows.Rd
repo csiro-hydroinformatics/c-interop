@@ -4,8 +4,7 @@
 \alias{updatePathWindows}
 \title{Update the PATH env var on windows, to locate an appropriate DLL dependency.}
 \usage{
-updatePathWindows(envVarName = "LIBRARY_PATH",
-  libfilename = "mylib.dll")
+updatePathWindows(envVarName = "LIBRARY_PATH", libfilename = "mylib.dll")
 }
 \arguments{
 \item{envVarName}{the environment variable to look for a root for architecture dependent libraries.}
