@@ -23,6 +23,15 @@ using namespace Rcpp;
 #define RCPP_TS_DATA_ITEMNAME "Data"
 #define RCPP_TS_TIMESTEP_ITEMNAME "TimeStep"
 
+#define RCPP_STAT_LENGTH_NAME "Length"
+#define RCPP_STAT_SPEC_NAME "Statistics"
+#define RCPP_STAT_OBSERVATIONS_NAME "Observations"
+
+#define RCPP_STAT_VAR_ID_NAME "ModelVarId"
+#define RCPP_STAT_STAT_ID_NAME "StatisticId"
+#define RCPP_STAT_OBJ_ID_NAME "ObjectiveId"
+#define RCPP_STAT_OBJ_NAME_NAME "ObjectiveName"
+
 namespace cinterop
 {
 	namespace rcpp
@@ -76,7 +85,6 @@ namespace cinterop
 			return rTsInfo;
 		}
 
-
 		template<>
 		inline multi_regular_time_series_data to_multi_regular_time_series_data<Rcpp::S4>(const Rcpp::S4& timeSeriesEnsemble)
 		{
@@ -89,8 +97,6 @@ namespace cinterop
 			result.time_series_geometry = to_regular_time_series_geometry(rTsInfo);
 			return result;
 		}
-
-
 
 		template<>
 		inline Rcpp::S4 from_multi_regular_time_series_data<Rcpp::S4>(const multi_regular_time_series_data& mts)
@@ -108,7 +114,6 @@ namespace cinterop
 			*/
 			return timeSeriesEnsemble;
 		}
-
 
 		template<typename T=List> // Kludge to be header only
 		T make_time_series_info(const NumericVector& data, const regular_time_series_geometry& mtsg, const string& time_zone="UTC")
@@ -131,7 +136,46 @@ namespace cinterop
 				Rcpp::Named(RCPP_TS_TIMESTEP_ITEMNAME) = tStep);
 		}
 
+	}
+	namespace statistics
+	{
+		template<>
+		inline void to_multi_statistic_definition<Rcpp::List>(const Rcpp::List& rTsInfo, multi_statistic_definition& msd)
+		{
+			using namespace cinterop::utils;
 
+			rTsInfo[0];
 
+			//NumericVector resid = as<NumericVector>(mod["residuals"]);
+			//NumericVector fitted = as<NumericVector>(mod["fitted.values"]);
+
+			msd.size = as<int>(rTsInfo[RCPP_STAT_LENGTH_NAME]);
+			msd.statistics = new statistic_definition * [msd.size];
+
+			DataFrame specs = as<DataFrame>(rTsInfo[RCPP_STAT_SPEC_NAME]);
+
+			List observations = as<List>(rTsInfo[RCPP_STAT_OBSERVATIONS_NAME]);
+
+			auto model_variable_id = Rcpp::as<CharacterVector>(specs[RCPP_STAT_VAR_ID_NAME]);
+			auto statistic_identifier = Rcpp::as<CharacterVector>(specs[RCPP_STAT_STAT_ID_NAME]);
+			auto objective_identifier = Rcpp::as<CharacterVector>(specs[RCPP_STAT_OBJ_ID_NAME]);
+			auto objective_name = Rcpp::as<CharacterVector>(specs[RCPP_STAT_OBJ_NAME_NAME]);
+			auto start = Rcpp::as<NumericVector>(specs[RCPP_TS_START_NAME]);
+			auto end = Rcpp::as<NumericVector>(specs[RCPP_TS_END_NAME]);
+
+			for (size_t i = 0; i < msd.size; i++)
+			{
+				auto obsSeries = as<S4>(observations[i]);
+				statistic_definition* stat = to_statistic_definition_ptr<S4>(
+					as<string>(model_variable_id[i]), 
+					as<string>(statistic_identifier[i]),
+					as<string>(objective_identifier[i]),
+					as<string>(objective_name[i]),
+					to_date_time_to_second(start[i]), to_date_time_to_second(end[i]), obsSeries);
+				msd.statistics[i] = stat;
+			}
+
+			msd.mix_statistics_id = nullptr;
+		}
 	}
 }

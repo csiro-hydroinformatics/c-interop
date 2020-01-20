@@ -101,6 +101,12 @@ namespace cinterop
 			return d;
 		}
 
+		template<>
+		inline date_time_to_second to_date_time_to_second<Rcpp::NumericVector>(const Rcpp::NumericVector& dt_num)
+		{
+			return to_date_time_to_second(Datetime(dt_num));
+		}
+
 		template<typename T>
 		T to_posix_ct_date_time(const date_time_to_second& dt);
 
@@ -127,6 +133,21 @@ namespace cinterop
 			//	and there is no way to specify another time zone. This is bug prone, so let
 			//	 us instead use to_posix_ct_date_time which is explicit with UTC
 			return Datetime(to_posix_ct_date_time<Rcpp::NumericVector>(dt));
+		}
+
+		template<>
+		inline void to_named_values_vector<NumericVector>(const NumericVector& x, named_values_vector& vv)
+		{
+			int n = x.length();
+			vv.size = n;
+			CharacterVector c = x.names();
+			vv.names = new char* [n];
+			vv.values = new double[n];
+			for (size_t i = 0; i < n; i++)
+			{
+				vv.names[i] = STRDUP(as<string>(c[i]).c_str());
+				vv.values[i] = x[i];
+			}
 		}
 	}
 #define S4_EXTERNAL_OBJ_CLASSNAME "ExternalObjRef"
