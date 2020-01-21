@@ -8,6 +8,14 @@ namespace cinterop
 		template<typename T>
 		void dispose_of(T& d);
 
+		template<typename T>
+		void dispose_of(T* d)
+		{
+			T& ref = *d;
+			dispose_of<T>(ref);
+			delete d;
+		}
+
 		template<typename F>
 		void free_c_array(F* values, size_t  arrayLength);
 

@@ -34,7 +34,15 @@ namespace cinterop
 		multi_regular_time_series_data to_multi_regular_time_series_data(const From& timeSeriesEnsemble);
 
 		template<typename From>
-		multi_regular_time_series_data* to_multi_regular_time_series_data_ptr(const From& timeSeriesEnsemble);
+		void to_multi_regular_time_series_data(const From& timeSeriesEnsemble, multi_regular_time_series_data& m);
+
+		template<typename From>
+		multi_regular_time_series_data* to_multi_regular_time_series_data_ptr(const From& timeSeriesEnsemble)
+		{
+			multi_regular_time_series_data* m = new multi_regular_time_series_data();
+		    to_multi_regular_time_series_data(timeSeriesEnsemble, *m);
+			return m;
+		}
 
 		template<typename To>
 		To from_multi_regular_time_series_data(const multi_regular_time_series_data& mts);
@@ -49,25 +57,26 @@ namespace cinterop
 		multi_statistic_definition* to_multi_statistic_definition_ptr(const From& definition)
 		{
 			multi_statistic_definition* mts = new multi_statistic_definition();
-			to_multi_statistic_definition(rTsInfo, *mts);
+			to_multi_statistic_definition(definition, *mts);
 			return mts;
 		}
 
 		template<typename From>
-		statistic_definition* to_statistic_definition_ptr(const string& model_variable_id, const string& statistic_identifier, const string& objective_identifier, const string& objective_name,
-			const date_time_to_second& start, const date_time_to_second& end, const From& time_series_data)
-		{
-			using namespace cinterop::timeseries;
-			statistic_definition* stat = new statistic_definition();
-			stat->statistic_identifier = STRDUP(statistic_identifier.c_str());
-			stat->start = start;
-			stat->end = end;
-			stat->model_variable_id = STRDUP(model_variable_id.c_str());
-			stat->objective_identifier = STRDUP(objective_identifier.c_str());
-			stat->objective_name = STRDUP(objective_name.c_str());
-			stat->observations = to_multi_regular_time_series_data_ptr<From>(time_series_data);
-			return stat;
-		}
+		statistic_definition* to_statistic_definition_ptr(const std::string& model_variable_id, const std::string& statistic_identifier, const std::string& objective_identifier, const std::string& objective_name,
+			const date_time_to_second& start, const date_time_to_second& end, const From& time_series_data);
+		// Tried to have a default implementation and relying on finding an implementation for to_multi_regular_time_series_data_ptr<From> but had issues getting this working. 
+		//{
+		//	using namespace cinterop::timeseries;
+		//	statistic_definition* stat = new statistic_definition();
+		//	stat->statistic_identifier = STRDUP(statistic_identifier.c_str());
+		//	stat->start = start;
+		//	stat->end = end;
+		//	stat->model_variable_id = STRDUP(model_variable_id.c_str());
+		//	stat->objective_identifier = STRDUP(objective_identifier.c_str());
+		//	stat->objective_name = STRDUP(objective_name.c_str());
+		//	stat->observations = to_multi_regular_time_series_data_ptr<From>(time_series_data);
+		//	return stat;
+		//}
 	}
 
 	namespace disposal {

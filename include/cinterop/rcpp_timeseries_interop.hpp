@@ -86,6 +86,16 @@ namespace cinterop
 		}
 
 		template<>
+		inline void to_multi_regular_time_series_data<Rcpp::S4>(const Rcpp::S4& timeSeriesEnsemble, multi_regular_time_series_data& mts)
+		{
+			const Rcpp::S4& rTsInfo = timeSeriesEnsemble.slot(RCPP_TS_GEOM_SLOTNAME);
+			mts.ensemble_size = timeSeriesEnsemble.slot(RCPP_TS_ENSEMBLESIZE_SLOTNAME);
+			const Rcpp::NumericMatrix& m = timeSeriesEnsemble.slot(RCPP_TS_NUMERICDATA_SLOTNAME);
+			mts.numeric_data = cinterop::utils::to_double_ptr_array<NumericMatrix>(m);
+			mts.time_series_geometry = to_regular_time_series_geometry(rTsInfo);
+		}
+
+		template<>
 		inline multi_regular_time_series_data to_multi_regular_time_series_data<Rcpp::S4>(const Rcpp::S4& timeSeriesEnsemble)
 		{
 			multi_regular_time_series_data result;
@@ -140,6 +150,23 @@ namespace cinterop
 	namespace statistics
 	{
 		template<>
+		inline statistic_definition* to_statistic_definition_ptr<S4>(const string& model_variable_id, const string& statistic_identifier, const string& objective_identifier, const string& objective_name,
+			const date_time_to_second& start, const date_time_to_second& end, const S4& time_series_data)
+		{
+			using namespace cinterop::timeseries;
+			statistic_definition* stat = new statistic_definition();
+			stat->statistic_identifier = STRDUP(statistic_identifier.c_str());
+			stat->start = start;
+			stat->end = end;
+			stat->model_variable_id = STRDUP(model_variable_id.c_str());
+			stat->objective_identifier = STRDUP(objective_identifier.c_str());
+			stat->objective_name = STRDUP(objective_name.c_str());
+			stat->observations = to_multi_regular_time_series_data_ptr<S4>(time_series_data);
+			return stat;
+		}
+
+
+		template<>
 		inline void to_multi_statistic_definition<Rcpp::List>(const Rcpp::List& rTsInfo, multi_statistic_definition& msd)
 		{
 			using namespace cinterop::utils;
@@ -171,7 +198,7 @@ namespace cinterop
 					as<string>(statistic_identifier[i]),
 					as<string>(objective_identifier[i]),
 					as<string>(objective_name[i]),
-					to_date_time_to_second(start[i]), to_date_time_to_second(end[i]), obsSeries);
+					to_date_time_to_second(NumericVector(start[i])), to_date_time_to_second(NumericVector(end[i])), obsSeries);
 				msd.statistics[i] = stat;
 			}
 

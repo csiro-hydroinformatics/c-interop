@@ -2,11 +2,11 @@
 
 // Template specialisations for interop with Rcpp
 
-#include "rcpp_strict_r_headers.hpp"
+#include "cinterop/rcpp_strict_r_headers.hpp"
 
-#include "common_c_interop.h"
-#include "c_interop_forward_decl.h"
-#include "c_cpp_interop.hpp"
+#include "cinterop/common_c_interop.h"
+#include "cinterop/c_interop_forward_decl.h"
+#include "cinterop/c_cpp_interop.hpp"
 
 using namespace Rcpp;
 
