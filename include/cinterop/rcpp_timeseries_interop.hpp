@@ -165,7 +165,6 @@ namespace cinterop
 			return stat;
 		}
 
-
 		template<>
 		inline void to_multi_statistic_definition<Rcpp::List>(const Rcpp::List& rTsInfo, multi_statistic_definition& msd)
 		{
@@ -192,13 +191,23 @@ namespace cinterop
 
 			for (size_t i = 0; i < msd.size; i++)
 			{
-				auto obsSeries = as<S4>(observations[i]);
+				string mvid = as<string>(model_variable_id[i]);
+				string sid = as<string>(statistic_identifier[i]);
+				string objid = as<string>(objective_identifier[i]);
+				string objname = as<string>(objective_name[i]);
+				S4 obsSeries = as<S4>(observations[i]);
+				NumericVector s(1);
+				s[0] = start[i];
+				NumericVector e(1);
+				e[0] = end[i];
 				statistic_definition* stat = to_statistic_definition_ptr<S4>(
-					as<string>(model_variable_id[i]), 
-					as<string>(statistic_identifier[i]),
-					as<string>(objective_identifier[i]),
-					as<string>(objective_name[i]),
-					to_date_time_to_second(NumericVector(start[i])), to_date_time_to_second(NumericVector(end[i])), obsSeries);
+					mvid, 
+					sid,
+					objid,
+					objname,
+					to_date_time_to_second(s),
+					to_date_time_to_second(e),
+					obsSeries);
 				msd.statistics[i] = stat;
 			}
 
