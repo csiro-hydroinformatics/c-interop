@@ -79,6 +79,17 @@ namespace cinterop
 		void to_named_values_vector(const T& x, named_values_vector& nvv);
 
 		template<typename T>
+		T from_named_values_vector(const named_values_vector& nvv);
+
+		template<typename T>
+		T from_named_values_vector_ptr(named_values_vector* nvv, bool dispose)
+		{
+			T result = from_named_values_vector<T>(*nvv);
+			if (dispose) cinterop::disposal::dispose_of(nvv);
+			return result;
+		}
+
+		template<typename T>
 		named_values_vector* to_named_values_vector_ptr(const T& x)
 		{
 			named_values_vector* nvv = new named_values_vector();
@@ -112,6 +123,9 @@ namespace cinterop
 		template<typename T>
 		string_string_map to_string_string_map(const T& x);
 
+		template<typename T>
+		T from_string_string_map(const string_string_map& x);
+
 		template<typename T = std::string> // hack to be header-only
 		string_string_map create_string_string_map(const std::vector<std::string>& names, const std::vector<T>& values)
 		{
@@ -126,6 +140,14 @@ namespace cinterop
 				vv.values[i] = STRDUP(values[i].c_str());
 			}
 			return vv;
+		}
+
+		template<typename T>
+		T from_string_string_map_ptr(string_string_map* m, bool dispose)
+		{
+			T result = from_string_string_map<T>(*m);
+			if (dispose) cinterop::disposal::dispose_of(m);
+			return result;
 		}
 
 		template<typename T, typename K, typename V>

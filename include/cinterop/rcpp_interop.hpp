@@ -136,6 +136,28 @@ namespace cinterop
 		}
 
 		template<>
+		inline NumericVector from_named_values_vector<NumericVector>(const named_values_vector& nvv)
+		{
+			vector<double> values;
+			vector<string> names;
+			cinterop::utils::to_columns(nvv, names, values);
+			NumericVector v = wrap(values);
+			v.names() = names;
+			return v;
+		}
+
+		template<>
+		inline CharacterVector from_string_string_map(const string_string_map& m)
+		{
+			vector<string> values;
+			vector<string> names;
+			cinterop::utils::to_columns(m, names, values);
+			CharacterVector v = wrap(values);
+			v.names() = names;
+			return v;
+		}
+
+		template<>
 		inline void to_named_values_vector<NumericVector>(const NumericVector& x, named_values_vector& vv)
 		{
 			int n = x.length();
