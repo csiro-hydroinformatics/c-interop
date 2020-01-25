@@ -97,6 +97,28 @@ namespace cinterop
 			return nvv;
 		}
 
+		template<typename T>
+		void to_character_vector(const T& x, character_vector& charv);
+
+		template<typename T>
+		T from_character_vector(const character_vector& charv);
+
+		template<typename T>
+		T from_character_vector_ptr(character_vector* charv, bool dispose)
+		{
+			T result = from_character_vector<T>(*charv);
+			if (dispose) cinterop::disposal::dispose_of(charv);
+			return result;
+		}
+
+		template<typename T>
+		character_vector* to_character_vector_ptr(const T& x)
+		{
+			character_vector* charv = new character_vector();
+			to_character_vector<T>(x, *charv);
+			return charv;
+		}
+
 		template<typename T = double> // hack to be header-only
 		named_values_vector create_named_values_vector(const std::vector<std::string>& names, const std::vector<T>& values)
 		{
@@ -311,6 +333,25 @@ namespace cinterop
 				v[i] = x.values[i];
 			}
 		}
+
+		template<>
+		inline void to_character_vector<vector<string>>(const vector<string>& x, character_vector& charv)
+		{
+			charv.size = x.size();
+			charv.values = new char* [x.size()];
+			for (size_t i = 0; i < x.size(); i++)
+				charv.values[i] = STRDUP(x[i].c_str());
+		}
+
+		template<>
+		inline vector<string> from_character_vector(const character_vector& charv)
+		{
+			vector<string> x;
+			for (size_t i = 0; i < charv.size; i++)
+				x.push_back(string(charv.values[i]));
+			return x;
+		}
+
 	}
 
 	namespace disposal {
@@ -327,6 +368,16 @@ namespace cinterop
 			if (d.values != nullptr)
 			{
 				delete[] d.values;
+				d.values = nullptr;
+			}
+		}
+
+		template<>
+		inline void dispose_of<character_vector>(character_vector& d)
+		{
+			if (d.values != nullptr)
+			{
+				free_c_ptr_array<char>(d.values, d.size);
 				d.values = nullptr;
 			}
 		}

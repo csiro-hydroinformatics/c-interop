@@ -147,6 +147,13 @@ namespace cinterop
 		}
 
 		template<>
+		inline CharacterVector from_character_vector<CharacterVector>(const character_vector& cv)
+		{
+			vector<string> names;
+			return cinterop::utils::to_custom_character_vector<CharacterVector>(cv.values, cv.size, false);
+		}
+
+		template<>
 		inline CharacterVector from_string_string_map(const string_string_map& m)
 		{
 			vector<string> values;
@@ -171,6 +178,17 @@ namespace cinterop
 				vv.values[i] = x[i];
 			}
 		}
+
+		template<>
+		inline void to_character_vector<CharacterVector>(const CharacterVector& x, character_vector& vv)
+		{
+			int n = x.length();
+			vv.size = n;
+			vv.values = new char* [n];
+			for (size_t i = 0; i < n; i++)
+				vv.values[i] = STRDUP(as<string>(x[i]).c_str());
+		}
+
 	}
 #define S4_EXTERNAL_OBJ_CLASSNAME "ExternalObjRef"
 #define S4_OBJ_SLOTNAME "obj"
