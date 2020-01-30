@@ -143,7 +143,15 @@ namespace cinterop
 		}
 
 		template<typename T>
-		string_string_map to_string_string_map(const T& x);
+		void to_string_string_map(const T& x, string_string_map& m);
+
+		template<typename T>
+		string_string_map to_string_string_map(const T& x)
+		{
+			string_string_map m;
+			to_string_string_map(x, m);
+			return m;
+		}
 
 		template<typename T>
 		T from_string_string_map(const string_string_map& x);
@@ -170,6 +178,14 @@ namespace cinterop
 			T result = from_string_string_map<T>(*m);
 			if (dispose) cinterop::disposal::dispose_of(m);
 			return result;
+		}
+
+		template<typename T>
+		string_string_map* to_string_string_map_ptr(const T& from)
+		{
+			string_string_map* m = new string_string_map();
+			to_string_string_map<T>(from, *m);
+			return m;
 		}
 
 		template<typename T, typename K, typename V>
@@ -268,9 +284,8 @@ namespace cinterop
 		}
 
 		template<>
-		inline string_string_map to_string_string_map<std::map<string, string>>(const std::map<string, string>& x)
+		inline void to_string_string_map<std::map<string, string>>(const std::map<string, string>& x, string_string_map& y)
 		{
-			string_string_map y;
 			y.size = x.size();
 			y.keys = new char*[y.size];
 			y.values = new char*[y.size];
@@ -282,9 +297,7 @@ namespace cinterop
 				y.values[i] = to_ansi_string(kv.second);
 				i++;
 			}
-			return y;
 		}
-
 
 		template<>
 		inline std::map<string, double> to_map<named_values_vector,string,double>(const named_values_vector& x)
@@ -302,6 +315,12 @@ namespace cinterop
 			for (size_t i = 0; i < x.size; i++)
 				y[string(x.keys[i])] = x.values[i];
 			return y;
+		}
+
+		template<>
+		inline std::map<string, string> from_string_string_map(const string_string_map& x)
+		{
+			return to_map<string_string_map, string, string>(x);
 		}
 
 		template<>
@@ -352,6 +371,67 @@ namespace cinterop
 			return x;
 		}
 
+		// Parse a string and cast to a target type.
+		// There appears not to be any equivalent to boost::lexical_cast (TBC for c++14 and later).
+		template <typename T>
+		T parse(const string& str);
+
+		template<>
+		inline double parse<double>(const string& str)
+		{
+			return std::stod(str);
+		}
+
+		template<>
+		inline int parse<int>(const string& str)
+		{
+			return std::stoi(str);
+		}
+
+		template<>
+		inline string parse<string>(const string& str)
+		{
+			return str;
+		}
+
+		template<typename K = string, typename V = string>
+		bool has_key(const std::map<K, V>& dict, const string& key)
+		{
+			return (dict.find(key) != dict.end());
+		}
+
+		template <typename T>
+		T get_optional_parameter(const string& key, const std::map<string, T>& params, T fallback)
+		{
+			if (has_key<string, T>(params, key))
+				return params.at(key);
+			else
+				return fallback;
+		}
+
+		template <typename T>
+		T get_mandatory_parameter(const std::map<string, T>& params, const string& key)
+		{
+			if (!has_key<string, T>(params, key))
+				throw std::logic_error("Mandatory key expected in the dictionary but not found: " + key);
+			return params.at(key);
+		}
+
+		template <typename U>
+		U parse_kwarg(const string& key, const std::map<string, string>& params, bool optional, U fallback)
+		{
+			if (!has_key<string, string>(params, key))
+			{
+				if (optional)
+					return fallback;
+				else
+					throw std::logic_error("Mandatory key expected in the dictionary but not found: " + key);
+			}
+			else
+			{
+				return parse<U>(params.at(key));
+			}
+		}
 	}
 
 	namespace disposal {

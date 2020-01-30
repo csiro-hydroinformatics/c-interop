@@ -24,6 +24,13 @@ namespace cinterop
 	namespace utils
 	{
 		template<>
+		inline char* to_ansi_string<CharacterVector>(const CharacterVector& s)
+		{
+			string ss = as<string>(s[0]);
+			return to_ansi_string<string>(ss);
+		}
+
+		template<>
 		inline char** to_ansi_char_array<CharacterVector>(const CharacterVector& charVec)
 		{
 			char** res = new char*[charVec.length()];
@@ -165,6 +172,22 @@ namespace cinterop
 		}
 
 		template<>
+		inline void to_string_string_map<CharacterVector>(const CharacterVector& x, string_string_map& m)
+		{
+			m.size = x.size();
+			m.keys = new char* [m.size];
+			m.values = new char* [m.size];
+			CharacterVector c = x.names();
+			size_t i = 0;
+			for (const auto& kv : x)
+			{
+				m.keys[i] = to_ansi_string(as<string>(c[i]));
+				m.values[i] = to_ansi_string(as<string>(x[i]));
+				i++;
+			}
+		}
+
+		template<>
 		inline void to_named_values_vector<NumericVector>(const NumericVector& x, named_values_vector& vv)
 		{
 			int n = x.length();
@@ -174,7 +197,7 @@ namespace cinterop
 			vv.values = new double[n];
 			for (size_t i = 0; i < n; i++)
 			{
-				vv.names[i] = STRDUP(as<string>(c[i]).c_str());
+				vv.names[i] = to_ansi_string(as<string>(c[i]));
 				vv.values[i] = x[i];
 			}
 		}
@@ -186,9 +209,8 @@ namespace cinterop
 			vv.size = n;
 			vv.values = new char* [n];
 			for (size_t i = 0; i < n; i++)
-				vv.values[i] = STRDUP(as<string>(x[i]).c_str());
+				vv.values[i] = to_ansi_string(as<string>(x[i]));
 		}
-
 	}
 #define S4_EXTERNAL_OBJ_CLASSNAME "ExternalObjRef"
 #define S4_OBJ_SLOTNAME "obj"
