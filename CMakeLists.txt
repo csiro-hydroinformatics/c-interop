@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.0)
 SET (this_target cinterop)
 PROJECT(${this_target})
 
+SET (VERSION 1.0)
+
 ## section: include directory
 INCLUDE_DIRECTORIES(
 	./include
