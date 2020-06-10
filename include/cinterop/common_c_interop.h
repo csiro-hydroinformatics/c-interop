@@ -31,17 +31,29 @@ typedef struct _date_time_to_second
 
 typedef struct _named_values_vector
 {
-	size_t size;
-	double* values;
-	char** names;
+	size_t size; //!< Size of the vector
+	double* values; //!< values of the vector
+	char** names; //!< Names of the vector
 } named_values_vector;
 
+/**
+ * \struct	character_vector
+ *
+ * \brief	a struct for interop, useful to convey equivalents to e.g. 
+ * 			std::vector<double>, or R's character vectors
+ */
 typedef struct _character_vector
 {
 	size_t size;
 	char** values;
 } character_vector;
 
+/**
+ * \struct	string_string_map
+ *
+ * \brief	a struct for interop, useful to convey equivalents to e.g. 
+ * 			std::map<string,string>, or R's named list or named vector of strings
+ */
 typedef struct _string_string_map
 {
 	size_t size;

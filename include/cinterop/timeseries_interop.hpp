@@ -1,19 +1,45 @@
 #pragma once
 
+#include <string>
 #include "cinterop/timeseries_c_interop.h"
 #include "cinterop/object_lifetimes.hpp"
+
+using std::string;
 
 namespace cinterop
 {
 	namespace timeseries
 	{
 
+		/**
+		 * \brief	templates for functions converting one time series representation into a #regular_time_series_geometry C interop struct
+		 * 
+		 * \tparam	From	The type of time series to transform from, for example an R list
+		 * \param rTsInfo	Time series source representation
+		 * \param mts	[out] mts heap or stack allocated struct; beware to choose appropriately how to dispose of it depending on its allocation. 
+		 */
 		template<typename From>
 		void to_regular_time_series_geometry(const From& rTsInfo, regular_time_series_geometry& mts);
 
+		/**
+		 * \brief	template for functions converting from a #regular_time_series_geometry C interop struct to another representation.
+		 * 
+		 * \tparam	To	The type of time series to transform to, for example an R list
+		 * \param mts	[in] mts heap or stack allocated struct; beware to choose appropriately how to dispose of it depending on its allocation. 
+		 * 
+		 * \return  the time series in its target representation (which should have a copy or move constructor and assigment operator)
+		 */
 		template<typename To>
 		To from_regular_time_series_geometry(const regular_time_series_geometry& mts);
 
+		/**
+		 * \brief	templates for functions converting one time series representation into a #regular_time_series_geometry C interop struct
+		 * 
+		 * \tparam	From	The type of time series to transform from, for example an R list
+		 * \param rTsInfo	Time series source representation
+		 * 
+		 * \return  the time series in its target representation (which should have a copy or move constructor and assigment operator)
+		 */
 		template<typename From>
 		regular_time_series_geometry to_regular_time_series_geometry(const From& rTsInfo)
 		{
@@ -22,6 +48,14 @@ namespace cinterop
 			return mts;
 		}
 
+		/**
+		 * \brief	templates for functions converting one time series representation into a #regular_time_series_geometry C interop struct
+		 * 
+		 * \tparam	From	The type of time series to transform from, for example an R list
+		 * \param rTsInfo	Time series source representation
+		 * 
+		 * \return  pointer to heap allocated time series in its target representation
+		 */
 		template<typename From>
 		regular_time_series_geometry* to_regular_time_series_geometry_ptr(const From& rTsInfo)
 		{
@@ -30,12 +64,36 @@ namespace cinterop
 			return mts;
 		}
 
+		/**
+		 * \brief	templates for functions converting one time series representation into a #multi_regular_time_series_data C interop struct
+		 * 
+		 * \tparam	From	The type of time series to transform from, for example an R list
+		 * \param timeSeriesEnsemble	Time series source representation
+		 * 
+		 * \return  the time series in its target representation (which should have a copy or move constructor and assigment operator)
+		 */
 		template<typename From>
 		multi_regular_time_series_data to_multi_regular_time_series_data(const From& timeSeriesEnsemble);
 
+		/**
+		 * \brief	templates for functions converting one time series representation into a #multi_regular_time_series_data C interop struct
+		 * 
+		 * \tparam	From	The type of time series to transform from, for example an R list
+		 * \param rTsInfo	Time series source representation
+		 * \param m	[out] mts heap or stack allocated struct; beware to choose appropriately how to dispose of it depending on its allocation. 
+		 */
 		template<typename From>
 		void to_multi_regular_time_series_data(const From& timeSeriesEnsemble, multi_regular_time_series_data& m);
 
+		/**
+		 * \brief	templates for functions converting one time series representation into a #multi_regular_time_series_data C interop struct
+		 * 
+		 * \tparam	From	The type of time series to transform from, for example an R list
+		 * \param timeSeriesEnsemble	Time series source representation
+		 * 
+		 * \return  the time series in its target representation (which should have a copy or move constructor and assigment operator)
+		 * \return  pointer to heap allocated time series in its target representation
+		 */
 		template<typename From>
 		multi_regular_time_series_data* to_multi_regular_time_series_data_ptr(const From& timeSeriesEnsemble)
 		{
@@ -44,15 +102,37 @@ namespace cinterop
 			return m;
 		}
 
+		/**
+		 * \brief	template for functions converting from a #multi_regular_time_series_data C interop struct to another representation.
+		 * 
+		 * \tparam	To	The type of time series to transform to, for example an R list
+		 * \param mts	[in] mts heap or stack allocated struct; beware to choose appropriately how to dispose of it depending on its allocation. 
+		 * 
+		 * \return  the time series in its target representation (which should have a copy or move constructor and assigment operator)
+		 */
 		template<typename To>
 		To from_multi_regular_time_series_data(const multi_regular_time_series_data& mts);
 
 	}
 	namespace statistics
 	{
+		/**
+		 * \brief	templates for functions converting one statistics representation into a #multi_statistic_definition C interop struct
+		 * 
+		 * \tparam	From	The type of statistics representation to transform from, for example an R S4 object
+		 * \param stat_defn	Statistics source representation
+		 * \param mts	[out] msd heap or stack allocated struct; beware to choose appropriately how to dispose of it depending on its allocation. 
+		 */
 		template<typename From>
-		void to_multi_statistic_definition(const From& rTsInfo, multi_statistic_definition& mts);
+		void to_multi_statistic_definition(const From& stat_defn, multi_statistic_definition& msd);
 			
+		/**
+		 * \brief	templates for functions converting one statistics representation into a #multi_statistic_definition C interop struct
+		 * 
+		 * \tparam	From	The type of statistics representation to transform from, for example an R S4 object
+		 * \param definition	Statistics source representation
+		 * \return	[out] pointer to heap allocated struct
+		 */
 		template<typename From>
 		multi_statistic_definition* to_multi_statistic_definition_ptr(const From& definition)
 		{
