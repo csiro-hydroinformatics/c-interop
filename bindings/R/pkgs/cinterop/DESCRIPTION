@@ -1,15 +1,15 @@
 Package: cinterop
 Type: Package
 Title: Reusable constructs for interop with opaque pointers in a C API
-Version: 0.3.0
-Date: 2019-08-03
+Version: 1.0
+Date: 2020-06-10
 Authors@R: c( person("Jean-Michel", "Perraud", email =
     "jean-michel.perraud@csiro.au", role = c("aut", "cre")))
 Author: Jean-Michel Perraud [aut, cre]
 Maintainer: Jean-Michel Perraud <per202@csiro.au>
 Description: Reusable constructs for interop with opaque pointers in a C API. Wrapper class around external pointers and simplified structures for holding information about time series, to avoid a dependence on xts header files.
 URL: https://github.com/jmp75/rcpp-interop-commons
-License: LGPL-3
+License: BSD-3
 Imports:
     methods,
     lubridate,

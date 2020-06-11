@@ -15,7 +15,7 @@ Type: \tab Package\cr
 Version: \tab 0.3.0 \cr
 Date: \tab 2019-08-03 \cr
 Release Notes: \tab Fixes to the R cinterop package, required by R 3.6+ which has likely broken the `prototype` argument in setClass. Issue #4: https://github.com/csiro-hydroinformatics/rcpp-interop-commons/issues/4 \cr
-License: \tab LGPL-3 \cr
+License: \tab BSD-3 \cr
 }
 
 \tabular{lll}{
