@@ -487,7 +487,7 @@ namespace cinterop
 		}
 
 		template<>
-		inline std::map<std::string, std::string> to_map<std::string_string_map, std::string, std::string>(const string_string_map& x)
+		inline std::map<std::string, std::string> to_map<string_string_map, std::string, std::string>(const string_string_map& x)
 		{
 			std::map<std::string, std::string> y;
 			for (size_t i = 0; i < x.size; i++)
@@ -498,7 +498,7 @@ namespace cinterop
 		template<>
 		inline std::map<std::string, std::string> from_string_string_map(const string_string_map& x)
 		{
-			return to_map<std::string_string_map, std::string, std::string>(x);
+			return to_map<string_string_map, std::string, std::string>(x);
 		}
 
 		template<>
@@ -517,7 +517,7 @@ namespace cinterop
 		}
 
 		template<>
-		inline void to_columns<std::string_string_map, std::string, std::string>(
+		inline void to_columns<string_string_map, std::string, std::string>(
 			const string_string_map& x,
 			std::vector<std::string>& k,
 			std::vector<std::string>& v)
@@ -651,7 +651,7 @@ namespace cinterop
 		}
 
 		template<>
-		inline void dispose_of<std::string_string_map>(string_string_map& d)
+		inline void dispose_of<string_string_map>(string_string_map& d)
 		{
 
 			if (d.keys != nullptr)
