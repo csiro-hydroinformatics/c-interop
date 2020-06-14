@@ -225,6 +225,18 @@ namespace cinterop
 		}
 
 		template<>
+		inline void to_values_vector<Rcpp::NumericVector>(const Rcpp::NumericVector& x, values_vector& vv)
+		{
+			int n = x.length();
+			vv.size = n;
+			vv.values = new double[n];
+			for (size_t i = 0; i < n; i++)
+			{
+				vv.values[i] = x[i];
+			}
+		}
+
+		template<>
 		inline void to_character_vector<CharacterVector>(const CharacterVector& x, character_vector& vv)
 		{
 			int n = x.length();

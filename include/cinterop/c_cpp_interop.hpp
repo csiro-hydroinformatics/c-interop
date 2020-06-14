@@ -549,6 +549,19 @@ namespace cinterop
 			return x;
 		}
 
+		template<>
+		inline void to_values_vector<std::vector<double>>(const std::vector<double>& x, values_vector& vv)
+		{
+			int n = x.size();
+			vv.size = n;
+			vv.values = new double[n];
+			for (size_t i = 0; i < n; i++)
+			{
+				vv.values[i] = x[i];
+			}
+		}
+
+
 		// Parse a string and cast to a target type.
 		// There appears not to be any equivalent to boost::lexical_cast (TBC for c++14 and later).
 		template <typename T>
