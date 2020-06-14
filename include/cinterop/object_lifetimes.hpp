@@ -1,6 +1,14 @@
 #pragma once
-
-// Intended for specialized disposal of C interop structs.
+/**
+ * @file object_lifetimes.hpp
+ * @author your name (you@domain.com)
+ * @brief Template declarations and specializations 
+ * for the disposal of C interop structs.
+ * @date 2020-06-14 
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
 
 namespace cinterop
 {

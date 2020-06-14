@@ -1,4 +1,13 @@
 #pragma once
+/**
+ * @file c_boost_posix_time_interop.hpp
+ * @author your name (you@domain.com)
+ * @brief specialisations to map C99 interop constructs to Boost constructs
+ * @date 2020-06-14
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
 
 #include <vector>
 #include <functional>

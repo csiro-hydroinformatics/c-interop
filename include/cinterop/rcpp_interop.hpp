@@ -1,6 +1,20 @@
 #pragma once
 
+/**
+ * @file rcpp_interop.hpp
+ * @author your name (you@domain.com)
+ * @brief specialisations to map C99 interop constructs to R (Rcpp) constructs
+ * @date 2020-06-14
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 // Template specialisations for interop with Rcpp
+
+#include <vector>
+#include <string>
+#include <map>
 
 #include "cinterop/rcpp_strict_r_headers.hpp"
 
@@ -26,8 +40,8 @@ namespace cinterop
 		template<>
 		inline char* to_ansi_string<CharacterVector>(const CharacterVector& s)
 		{
-			string ss = as<string>(s[0]);
-			return to_ansi_string<string>(ss);
+			std::string ss = as<std::string>(s[0]);
+			return to_ansi_string<std::string>(ss);
 		}
 
 		template<>
@@ -82,10 +96,10 @@ namespace cinterop
 		}
 
 		template<>
-		inline NumericVector to_custom_numeric_vector<NumericVector>(double* values, int length, bool cleanup)
+		inline Rcpp::NumericVector to_custom_numeric_vector<Rcpp::NumericVector>(double* values, int length, bool cleanup)
 		{
 			std::vector<double> v(values, values + length);
-			NumericVector data(length);
+			Rcpp::NumericVector data(length);
 			data.assign(v.begin(), v.end());
 			if (cleanup)
 				delete_array(values);
@@ -121,7 +135,7 @@ namespace cinterop
 		inline Rcpp::NumericVector to_posix_ct_date_time<Rcpp::NumericVector>(const date_time_to_second& mdt)
 		{
 			Rcpp::Function asPOSIXct("ISOdate"); // and we need to convert to POSIXct
-			NumericVector result(asPOSIXct(
+			Rcpp::NumericVector result(asPOSIXct(
 				Rcpp::wrap(mdt.year),
 				Rcpp::wrap(mdt.month),
 				Rcpp::wrap(mdt.day),
@@ -143,28 +157,36 @@ namespace cinterop
 		}
 
 		template<>
-		inline NumericVector from_named_values_vector<NumericVector>(const named_values_vector& nvv)
+		inline Rcpp::NumericVector from_named_values_vector<Rcpp::NumericVector>(const named_values_vector& nvv)
 		{
-			vector<double> values;
-			vector<string> names;
+			std::vector<double> values;
+			std::vector<std::string> names;
 			cinterop::utils::to_columns(nvv, names, values);
-			NumericVector v = wrap(values);
+			Rcpp::NumericVector v = wrap(values);
 			v.names() = names;
+			return v;
+		}
+
+		template<>
+		inline Rcpp::NumericVector from_values_vector<Rcpp::NumericVector>(const values_vector& vv)
+		{
+			std::vector<double> values = from_values_vector<std::vector<double>>(vv);
+			Rcpp::NumericVector v = wrap(values);
 			return v;
 		}
 
 		template<>
 		inline CharacterVector from_character_vector<CharacterVector>(const character_vector& cv)
 		{
-			vector<string> names;
+			std::vector<std::string> names;
 			return cinterop::utils::to_custom_character_vector<CharacterVector>(cv.values, cv.size, false);
 		}
 
 		template<>
 		inline CharacterVector from_string_string_map(const string_string_map& m)
 		{
-			vector<string> values;
-			vector<string> names;
+			std::vector<std::string> values;
+			std::vector<std::string> names;
 			cinterop::utils::to_columns(m, names, values);
 			CharacterVector v = wrap(values);
 			v.names() = names;
@@ -181,14 +203,14 @@ namespace cinterop
 			size_t i = 0;
 			for (const auto& kv : x)
 			{
-				m.keys[i] = to_ansi_string(as<string>(c[i]));
-				m.values[i] = to_ansi_string(as<string>(x[i]));
+				m.keys[i] = to_ansi_string(as<std::string>(c[i]));
+				m.values[i] = to_ansi_string(as<std::string>(x[i]));
 				i++;
 			}
 		}
 
 		template<>
-		inline void to_named_values_vector<NumericVector>(const NumericVector& x, named_values_vector& vv)
+		inline void to_named_values_vector<Rcpp::NumericVector>(const Rcpp::NumericVector& x, named_values_vector& vv)
 		{
 			int n = x.length();
 			vv.size = n;
@@ -197,7 +219,7 @@ namespace cinterop
 			vv.values = new double[n];
 			for (size_t i = 0; i < n; i++)
 			{
-				vv.names[i] = to_ansi_string(as<string>(c[i]));
+				vv.names[i] = to_ansi_string(as<std::string>(c[i]));
 				vv.values[i] = x[i];
 			}
 		}
@@ -209,7 +231,7 @@ namespace cinterop
 			vv.size = n;
 			vv.values = new char* [n];
 			for (size_t i = 0; i < n; i++)
-				vv.values[i] = to_ansi_string(as<string>(x[i]));
+				vv.values[i] = to_ansi_string(as<std::string>(x[i]));
 		}
 	}
 #define S4_EXTERNAL_OBJ_CLASSNAME "ExternalObjRef"

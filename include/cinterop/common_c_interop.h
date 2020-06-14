@@ -1,5 +1,15 @@
 #pragma once
 
+/**
+ * @file common_c_interop.h
+ * @author your name (you@domain.com)
+ * @brief Core generic C99 structures defined for interoperability through a C API
+ * @date 2020-06-14
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 #include <cstddef> // otherwise you may get "error: 'size_t' does not name a type" with gcc (at least compiling R pkgs)
 #include <string.h>
 
@@ -35,6 +45,17 @@ typedef struct _named_values_vector
 	double* values; //!< values of the vector
 	char** names; //!< Names of the vector
 } named_values_vector;
+
+/**
+ * @brief a struct for interop, useful to convey equivalents to e.g. 
+ * 			std::vector<double>, or R's numeric vectors
+ * 
+ */
+typedef struct _values_vector
+{
+	size_t size; //!< Size of the vector
+	double* values; //!< values of the vector
+} values_vector;
 
 /**
  * \struct	character_vector

@@ -1,5 +1,16 @@
 #pragma once
 
+/**
+ * @file timeseries_c_interop.h
+ * @author your name (you@domain.com)
+ * @brief C99 structures for time series concepts, defined for interoperability through a C API
+ * @date 2020-06-14
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
+
 /* C-API interoperable representation of time series */
 
 #include "cinterop/common_c_interop.h"

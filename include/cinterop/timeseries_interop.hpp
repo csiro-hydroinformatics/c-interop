@@ -1,5 +1,16 @@
 #pragma once
 
+/**
+ * @file timeseries_interop.hpp
+ * @author your name (you@domain.com)
+ * @brief template declarations relating to time series concepts, 
+ * defined for interoperability through a C API
+ * @date 2020-06-14
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 #include <string>
 #include "cinterop/timeseries_c_interop.h"
 #include "cinterop/object_lifetimes.hpp"

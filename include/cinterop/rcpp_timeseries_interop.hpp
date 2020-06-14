@@ -1,6 +1,14 @@
 #pragma once
 
-// Template specialisations for interop with Rcpp
+/**
+ * @file rcpp_timeseries_interop.hpp
+ * @author your name (you@domain.com)
+ * @brief Template specialisations for interop with Rcpp of time series concepts
+ * @date 2020-06-14
+ * 
+ * @copyright Copyright (c) 2020
+ */
+
 
 #include <cinterop/rcpp_strict_r_headers.hpp>
 

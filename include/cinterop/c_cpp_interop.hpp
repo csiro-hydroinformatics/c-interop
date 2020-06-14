@@ -1,5 +1,15 @@
 #pragma once
 
+/**
+ * @file c_cpp_interop.hpp
+ * @author your name (you@domain.com)
+ * @brief specialisations to map C99 interop constructs to C++ constructs
+ * @date 2020-06-14
+ * 
+ * @copyright Copyright (c) 2020
+ * 
+ */
+
 #include <string>
 #include <vector>
 #include <map>
@@ -17,13 +27,36 @@ namespace cinterop
 {
 	namespace utils
 	{
-		// template declarations
+
+		/**
+		 * @brief Template declaration for specific objects convertible to an ANSI character array representation.
+		 * 
+		 * @tparam S type of the source object to convert
+		 * @param s object to convert
+		 * @return char* 
+		 */
 		template<typename S>
 		char* to_ansi_string(const S& s);
 
+		/**
+		 * @brief Template declaration for objects convertible to a representation as an array of ANSI character array
+		 * 
+		 * @details This template declaration is useful for source objects such as Rcpp::CharacterVector 
+		 * 
+		 * @tparam V type of the source object to convert
+		 * @param charVec object to convert
+		 * @return char** 
+		 */
 		template<typename V>
 		char** to_ansi_char_array(const V& charVec);
 
+		/**
+		 * @brief Template declaration for vector of objects convertible to a representation as an array of ANSI character array
+		 * 
+		 * @tparam S type of the elements in the source vectors
+		 * @param charVec vector of object to convert
+		 * @return char** 
+		 */
 		template<typename S>
 		char** to_ansi_char_array(const std::vector<S>& charVec);
 
@@ -36,9 +69,60 @@ namespace cinterop
 		template<typename F>
 		double** to_double_ptr_array(const std::vector<std::vector<F>>& mat);
 
+		/**
+		 * @brief convert an array of ANSI strings to a custom representation, 
+		 * typically in a higher level language such as R for instance Rcpp::CaracterVector
+		 * 
+		 * @tparam T type of object to convert to 
+		 * @param names source array of ANSI strings
+		 * @param size size of the array of ANSI strings
+		 * @param cleanup if True, the caller requests the input 'names' argument to be disposed 
+		 * of by this function. This is appropriate when the caller knows that the array of ANSI 
+		 * strings was created in the module called, for instance in transient operation in glue 
+		 * code for conciseness.
+		 * 
+		 * @example This can be used in glue code such as the following:
+		 * @code
+		 * // [[Rcpp::export]]
+		 * CharacterVector GetPlayedVariableNames_Rcpp(XPtr<opaque_pointer_handle> simulation)
+		 * {
+		 *     int size; 
+		 *     char** values = GetPlayedVariableNames(simulation->get(),  &size);
+		 *     return to_custom_character_vector<CharacterVector>(values, size, true);
+		 * }
+		 * @endcode
+		 * 
+		 * @return T 
+		 */
 		template<typename T>
 		T to_custom_character_vector(char** names, int size, bool cleanup);
 
+		/**
+		 * @brief convert an C numeric array to a custom representation, 
+		 * typically in a higher level language such as R for instance Rcpp::CaracterVector
+		 * 
+		 * @tparam N type of object to convert to 
+		 * @param values source C numeric array
+		 * @param length size of the C numeric array
+		 * @param cleanup if True, the caller requests the input 'values' argument to be disposed 
+		 * of by this function. This is appropriate when the caller knows that the array of values 
+		 * was created in the module called, for instance in transient operation in glue 
+		 * code for conciseness.
+		 * 
+		 * @example This can be used in glue code such as the following:
+		 * @code
+		 * NumericVector GetPlayedData(XPtr<opaque_pointer_handle> simulation, CharacterVector variableIdentifier, MarshaledTsGeometry& mtsg)
+		 * {
+		 *     GetPlayedTsGeometry(simulation->get(), variableIdentifier[0], &mtsg);
+		 *     double * values = new double[mtsg.length];
+		 *     GetPlayed(simulation->get(), variableIdentifier[0], values, mtsg.length);
+		 *     NumericVector data = to_custom_numeric_vector<NumericVector>(values, mtsg.length, false);
+		 *     delete[] values;
+		 *     return data;
+		 * }
+		 * @endcode
+		 * 
+		 */
 		template<typename N>
 		N to_custom_numeric_vector(double* values, int length, bool cleanup);
 
@@ -48,6 +132,27 @@ namespace cinterop
 		template<typename T>
 		T from_date_time_to_second(const date_time_to_second& dt);
 
+		/**
+		 * @brief Templates for functions that transform values in an STL vectors, and returned as a C99-style array
+		 * 
+		 * @tparam T type of the elements in the source array
+		 * @tparam U type of the elements in the resulting C array
+		 * @param values source vector 
+		 * @param converter function converting source T elements to resulting elements of type U
+		 * @param size [out] size of the resulting C-array
+		 * @return U* 
+		 * @example The primary intent of this template is to have a vectorised syntax 
+		 * for the conversion of multidimensional arrays. The following example converts STL 
+		 * vectors of vectors of strings to C-style a char*** array.
+		 * @code
+		 * template<typename S = string>
+		 * char*** str_vector_vector_to_char_arrays(const vector<vector<S>>& data, int* size)
+		 * {
+		 * 	std::function<char**(const vector<S>& x)> conv = [](const vector<S>& x) {return cinterop::utils::to_ansi_char_array<S>(x); };
+		 * 	return cinterop::utils::vector_to_c_array<vector<S>, char**>(data, conv, size);
+		 * }
+		 * @endcode
+		 */
 		template<typename T = double, typename U = double>
 		U* vector_to_c_array(const vector<T>& values, std::function<U(const T&)> converter, int* size = nullptr)
 		{
@@ -98,6 +203,51 @@ namespace cinterop
 			return nvv;
 		}
 
+		/**
+		 * @brief Template for conversion to a value_vector struct
+		 * 
+		 */
+		template<typename T>
+		values_vector to_values_vector(const T& x);
+
+		/**
+		 * @brief Template for conversion to a value_vector struct
+		 * 
+		 */
+		template<typename T>
+		void to_values_vector(const T& x, values_vector& vv);
+
+		/**
+		 * @brief Template for conversions from a value_vector struct
+		 * 
+		 */
+		template<typename T>
+		T from_values_vector(const values_vector& vv);
+
+		template<typename T>
+		T from_values_vector_ptr(values_vector* vv, bool dispose)
+		{
+			T result = from_values_vector<T>(*vv);
+			if (dispose) cinterop::disposal::dispose_of(vv);
+			return result;
+		}
+
+		template<typename T>
+		values_vector* to_values_vector_ptr(const T& x)
+		{
+			values_vector* vv = new values_vector();
+			to_values_vector<T>(x, *vv);
+			return vv;
+		}
+
+		template<>
+		inline std::vector<double> from_values_vector<std::vector<double>>(const values_vector& vv)
+		{
+			std::vector<double> values(vv.size);
+			values.assign(vv.values, vv.values + vv.size);
+			return values;
+		}
+
 		template<typename T>
 		void to_character_vector(const T& x, character_vector& charv);
 
@@ -141,6 +291,27 @@ namespace cinterop
 		{
 			named_values_vector vtmp = create_named_values_vector<double>(names, values);
 			return new named_values_vector(vtmp);
+		}
+
+		template<typename T = double> // hack to be header-only
+		values_vector create_values_vector(const std::vector<T>& values)
+		{
+			size_t n = values.size();
+			values_vector vv;
+			vv.size = n;
+			vv.values = new T[n];
+			for (size_t i = 0; i < n; i++)
+			{
+				vv.values[i] = values[i];
+			}
+			return vv;
+		}
+
+		template<typename T = double> // hack to be header-only
+		values_vector* create_values_vector_ptr(const std::vector<T>& values)
+		{
+			values_vector vtmp = create_values_vector<double>(values);
+			return new values_vector(vtmp);
 		}
 
 		template<typename T>
@@ -226,7 +397,7 @@ namespace cinterop
 		*/
 
 		template<>
-		inline char* to_ansi_string<string>(const string& s)
+		inline char* to_ansi_string<std::string>(const string& s)
 		{
 			// Also of interest though not used here:
 			// http://stackoverflow.com/questions/347949/convert-stdstring-to-const-char-or-char?rq=1
@@ -236,7 +407,7 @@ namespace cinterop
 		}
 
 		template<>
-		inline char** to_ansi_char_array<string>(const std::vector<string>& charVec)
+		inline char** to_ansi_char_array<std::string>(const std::vector<std::string>& charVec)
 		{
 			char** result = new char*[charVec.size()];
 			for (size_t i = 0; i < charVec.size(); i++)
@@ -267,7 +438,7 @@ namespace cinterop
 		}
 
 		template<>
-		inline named_values_vector to_named_values_vector<std::map<string, double>>(const std::map<string, double>& x)
+		inline named_values_vector to_named_values_vector<std::map<std::string, double>>(const std::map<std::string, double>& x)
 		{
 			named_values_vector y;
 			y.size = x.size();
@@ -285,7 +456,13 @@ namespace cinterop
 		}
 
 		template<>
-		inline void to_string_string_map<std::map<string, string>>(const std::map<string, string>& x, string_string_map& y)
+		inline values_vector to_values_vector<std::vector<double>>(const std::vector<double>& x)
+		{
+			return create_values_vector<double>(x);
+		}
+
+		template<>
+		inline void to_string_string_map<std::map<std::string, std::string>>(const std::map<std::string, std::string>& x, string_string_map& y)
 		{
 			y.size = x.size();
 			y.keys = new char*[y.size];
@@ -301,33 +478,33 @@ namespace cinterop
 		}
 
 		template<>
-		inline std::map<string, double> to_map<named_values_vector,string,double>(const named_values_vector& x)
+		inline std::map<std::string, double> to_map<named_values_vector,string,double>(const named_values_vector& x)
 		{
-			std::map<string, double> y;
+			std::map<std::string, double> y;
 			for (size_t i = 0; i < x.size; i++)
 				y[string(x.names[i])] = x.values[i];
 			return y;
 		}
 
 		template<>
-		inline std::map<string, string> to_map<string_string_map, string, string>(const string_string_map& x)
+		inline std::map<std::string, std::string> to_map<std::string_string_map, std::string, std::string>(const string_string_map& x)
 		{
-			std::map<string, string> y;
+			std::map<std::string, std::string> y;
 			for (size_t i = 0; i < x.size; i++)
 				y[string(x.keys[i])] = x.values[i];
 			return y;
 		}
 
 		template<>
-		inline std::map<string, string> from_string_string_map(const string_string_map& x)
+		inline std::map<std::string, std::string> from_string_string_map(const string_string_map& x)
 		{
-			return to_map<string_string_map, string, string>(x);
+			return to_map<std::string_string_map, std::string, std::string>(x);
 		}
 
 		template<>
-		inline void to_columns<named_values_vector, string, double>(
+		inline void to_columns<named_values_vector, std::string, double>(
 			const named_values_vector& x, 
-			std::vector<string>& k, 
+			std::vector<std::string>& k, 
 			std::vector<double>& v)
 		{
 			k.resize(x.size);
@@ -340,10 +517,10 @@ namespace cinterop
 		}
 
 		template<>
-		inline void to_columns<string_string_map, string, string>(
+		inline void to_columns<std::string_string_map, std::string, std::string>(
 			const string_string_map& x,
-			std::vector<string>& k,
-			std::vector<string>& v)
+			std::vector<std::string>& k,
+			std::vector<std::string>& v)
 		{
 			k.resize(x.size);
 			v.resize(x.size);
@@ -355,7 +532,7 @@ namespace cinterop
 		}
 
 		template<>
-		inline void to_character_vector<vector<string>>(const vector<string>& x, character_vector& charv)
+		inline void to_character_vector<vector<std::string>>(const vector<std::string>& x, character_vector& charv)
 		{
 			charv.size = x.size();
 			charv.values = new char* [x.size()];
@@ -364,9 +541,9 @@ namespace cinterop
 		}
 
 		template<>
-		inline vector<string> from_character_vector(const character_vector& charv)
+		inline vector<std::string> from_character_vector(const character_vector& charv)
 		{
-			vector<string> x;
+			vector<std::string> x;
 			for (size_t i = 0; i < charv.size; i++)
 				x.push_back(string(charv.values[i]));
 			return x;
@@ -390,7 +567,7 @@ namespace cinterop
 		}
 
 		template<>
-		inline string parse<string>(const string& str)
+		inline string parse<std::string>(const string& str)
 		{
 			return str;
 		}
@@ -402,26 +579,26 @@ namespace cinterop
 		}
 
 		template <typename T>
-		T get_optional_parameter(const string& key, const std::map<string, T>& params, T fallback)
+		T get_optional_parameter(const string& key, const std::map<std::string, T>& params, T fallback)
 		{
-			if (has_key<string, T>(params, key))
+			if (has_key<std::string, T>(params, key))
 				return params.at(key);
 			else
 				return fallback;
 		}
 
 		template <typename T>
-		T get_mandatory_parameter(const std::map<string, T>& params, const string& key)
+		T get_mandatory_parameter(const std::map<std::string, T>& params, const string& key)
 		{
-			if (!has_key<string, T>(params, key))
+			if (!has_key<std::string, T>(params, key))
 				throw std::logic_error("Mandatory key expected in the dictionary but not found: " + key);
 			return params.at(key);
 		}
 
 		template <typename U>
-		U parse_kwarg(const string& key, const std::map<string, string>& params, bool optional, U fallback)
+		U parse_kwarg(const string& key, const std::map<std::string, std::string>& params, bool optional, U fallback)
 		{
-			if (!has_key<string, string>(params, key))
+			if (!has_key<std::string, std::string>(params, key))
 			{
 				if (optional)
 					return fallback;
@@ -436,6 +613,16 @@ namespace cinterop
 	}
 
 	namespace disposal {
+		template<>
+		inline void dispose_of<values_vector>(values_vector& d)
+		{
+			if (d.values != nullptr)
+			{
+				delete[] d.values;
+				d.values = nullptr;
+			}
+		}
+
 		template<>
 		inline void dispose_of<named_values_vector>(named_values_vector& d)
 		{
@@ -464,7 +651,7 @@ namespace cinterop
 		}
 
 		template<>
-		inline void dispose_of<string_string_map>(string_string_map& d)
+		inline void dispose_of<std::string_string_map>(string_string_map& d)
 		{
 
 			if (d.keys != nullptr)
