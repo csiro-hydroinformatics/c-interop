@@ -81,8 +81,8 @@ namespace cinterop
 		 * strings was created in the module called, for instance in transient operation in glue 
 		 * code for conciseness.
 		 * 
-		 * @example This can be used in glue code such as the following:
-		 * @code
+		 * @details This can be used in glue code such as the following:
+		 * @code{.cpp}
 		 * // [[Rcpp::export]]
 		 * CharacterVector GetPlayedVariableNames_Rcpp(XPtr<opaque_pointer_handle> simulation)
 		 * {
@@ -109,8 +109,8 @@ namespace cinterop
 		 * was created in the module called, for instance in transient operation in glue 
 		 * code for conciseness.
 		 * 
-		 * @example This can be used in glue code such as the following:
-		 * @code
+		 * @details This can be used in glue code such as the following:
+		 * @code{.cpp}
 		 * NumericVector GetPlayedData(XPtr<opaque_pointer_handle> simulation, CharacterVector variableIdentifier, MarshaledTsGeometry& mtsg)
 		 * {
 		 *     GetPlayedTsGeometry(simulation->get(), variableIdentifier[0], &mtsg);
@@ -141,10 +141,10 @@ namespace cinterop
 		 * @param converter function converting source T elements to resulting elements of type U
 		 * @param size [out] size of the resulting C-array
 		 * @return U* 
-		 * @example The primary intent of this template is to have a vectorised syntax 
+		 * @details The primary intent of this template is to have a vectorised syntax 
 		 * for the conversion of multidimensional arrays. The following example converts STL 
 		 * vectors of vectors of strings to C-style a char*** array.
-		 * @code
+		 * @code{.cpp}
 		 * template<typename S = string>
 		 * char*** str_vector_vector_to_char_arrays(const vector<vector<S>>& data, int* size)
 		 * {
