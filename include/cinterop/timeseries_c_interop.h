@@ -15,12 +15,20 @@
 
 #include "cinterop/common_c_interop.h"
 
+/** \brief	C-struct interop information describing the geometry of a time steps. Used to cater for strictly regular versus period varying ones (e.g. monthly)*/
+enum time_step_code
+{
+	strictly_regular = 0,    //!< time steps can be expressed strictly with the same length e.g. 3600 seconds
+	monthly_step = 1 //!< monthly time stepping
+};
+
 /** \brief	C-struct interop information describing the geometry of a time series with regular (fixed temporal period) time steps */
 typedef struct _regular_time_series_geometry
 {
 	date_time_to_second start; //!< First index of the time series.
 	int time_step_seconds; //!< Length of the time step for the time series e.g. 3600 for hourly time series
 	int length; //!< Size of the time series
+	time_step_code time_step_code; //!< Optional code of the time series for non-strictly fixed temporal periods, e.g. "monthly", possibly overriding the time_step_seconds property
 } regular_time_series_geometry;
 
 /** \brief	C-struct interop information defining a multivariate time series with regular (fixed temporal period) time steps */

@@ -23,6 +23,7 @@ using namespace Rcpp;
 #define RCPP_TS_END_NAME "End"
 #define RCPP_TS_LENGTH_NAME "Length"
 #define RCPP_TS_TSTEPSECONDS_NAME "TimeStepSeconds"
+#define RCPP_TS_TSTEPCODE_NAME "TimeStepCode"
 #define RCPP_TS_GEOM_CLASSNAMENAME "RegularTimeSeriesGeometry"
 #define RCPP_TS_GEOM_SLOTNAME "TsGeom"
 #define RCPP_TS_ENSEMBLESIZE_SLOTNAME "EnsembleSize"
@@ -30,6 +31,9 @@ using namespace Rcpp;
 #define RCPP_TS_MULTISERIES_CLASSNAME "RegularTimeSeries"
 #define RCPP_TS_DATA_ITEMNAME "Data"
 #define RCPP_TS_TIMESTEP_ITEMNAME "TimeStep"
+#define RCPP_TS_TIMESTEPCODE_ITEMNAME "TimeStepCode"
+
+#define RCPP_TZONE_NAME "tzone"
 
 #define RCPP_STAT_LENGTH_NAME "Length"
 #define RCPP_STAT_SPEC_NAME "Statistics"
@@ -79,6 +83,7 @@ namespace cinterop
 			mts.start = cinterop::utils::to_date_time_to_second<Rcpp::Datetime>(rTsInfo.slot(RCPP_TS_START_NAME));
 			mts.length = as<int>(rTsInfo.slot(RCPP_TS_LENGTH_NAME));
 			mts.time_step_seconds = as<int>(rTsInfo.slot(RCPP_TS_TSTEPSECONDS_NAME));
+			mts.time_step_code = time_step_code(as<int>(rTsInfo.slot(RCPP_TS_TSTEPCODE_NAME)));
 		}
 
 		template<>
@@ -87,6 +92,7 @@ namespace cinterop
 			Rcpp::S4 rTsInfo(RCPP_TS_GEOM_CLASSNAMENAME);
 			rTsInfo.slot(RCPP_TS_START_NAME) = cinterop::utils::to_posix_ct_date_time<NumericVector>(mts.start);
 			rTsInfo.slot(RCPP_TS_LENGTH_NAME) = mts.length;
+			rTsInfo.slot(RCPP_TS_TSTEPCODE_NAME) = (int) mts.time_step_code;
 			rTsInfo.slot(RCPP_TS_TSTEPSECONDS_NAME) = mts.time_step_seconds;
 
 			// 	Note that the class character itself has a list as an attribute. May be necessary, not sure yet
@@ -136,13 +142,15 @@ namespace cinterop
 		template<typename T=List> // Kludge to be header only
 		T make_time_series_info(const NumericVector& data, const regular_time_series_geometry& mtsg, const string& time_zone="UTC")
 		{
+			IntegerVector tStepCode(1, (int)mtsg.time_step_code);
 			IntegerVector tStep(1, mtsg.time_step_seconds);
 			CharacterVector tzone(time_zone);
 			return Rcpp::List::create(
 				Rcpp::Named(RCPP_TS_START_NAME) = cinterop::utils::to_posix_ct_date_time<Rcpp::NumericVector>(mtsg.start),
-				Rcpp::Named("tzone") = tzone,
+				Rcpp::Named(RCPP_TZONE_NAME) = tzone,
 				Rcpp::Named(RCPP_TS_DATA_ITEMNAME) = data,
-				Rcpp::Named(RCPP_TS_TIMESTEP_ITEMNAME) = tStep);
+				Rcpp::Named(RCPP_TS_TIMESTEP_ITEMNAME) = tStep,
+				Rcpp::Named(RCPP_TS_TIMESTEPCODE_ITEMNAME) = tStepCode);
 		}
 
 		template<typename T = List> // Kludge to be header only

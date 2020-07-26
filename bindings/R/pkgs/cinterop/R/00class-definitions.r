@@ -21,14 +21,16 @@ setClass('RegularTimeSeriesGeometry',
   slots = c(
     Start='POSIXct',
     Length='integer',
-    TimeStepSeconds='integer')
+    TimeStepSeconds='integer',
+    TimeStepCode='integer')
 )
 
 createDefaultTsGeometry <- function() {
   return(new('RegularTimeSeriesGeometry',
     Start=lubridate::origin,
     Length=0L,
-    TimeStepSeconds=3600L))
+    TimeStepSeconds=3600L,
+    TimeStepCode=0L))
 }
 
 #' Class RegularTimeSeries.

@@ -1,8 +1,8 @@
 Package: cinterop
 Type: Package
 Title: Reusable constructs for interop with opaque pointers in a C API
-Version: 1.0
-Date: 2020-06-10
+Version: 1.1
+Date: 2020-07-26
 Authors@R: c( person("Jean-Michel", "Perraud", email =
     "jean-michel.perraud@csiro.au", role = c("aut", "cre")))
 Author: Jean-Michel Perraud [aut, cre]
