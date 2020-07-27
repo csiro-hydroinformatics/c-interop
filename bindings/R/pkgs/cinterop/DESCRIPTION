@@ -17,7 +17,7 @@ Imports:
     stringr,
     xts
 Depends:
-    R (>= 3.1)
+    R (>= 3.5)
 Suggests:
     knitr,
     rmarkdown
