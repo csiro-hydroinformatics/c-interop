@@ -48,6 +48,25 @@ asXtsTimeSeries <- function(tsInfo) {
   xts::xts(tsInfo@NumericData, makeTimeAxis(tsInfo@TsGeom))
 }
 
+
+addMth <- function(n, d) {
+  d %m+% lubridate::period(n, "month")
+}
+
+addMonths <- function(d, n) {
+  stopifnot(is.POSIXct(d)) #brutal, but clear.
+  if (length(n) == 1) {
+    addMth(n, d)
+  } else {
+    dates <- sapply(n, addMth, d)
+    tzattr <- tz(d)
+    class(dates) <- c("POSIXct", "POSIXt")
+    # do NOT use : tz(dates) <- tzattr
+    attr(dates, "tzone") <- tzattr
+    dates
+  }
+}
+
 #' Creates a vector that can be used as a monthly time series index for an xts series
 #'
 #' Creates a vector that can be used as a monthly time series index for an xts series
@@ -58,13 +77,7 @@ asXtsTimeSeries <- function(tsInfo) {
 #' @import lubridate
 #' @export
 makeMonthlyTimeAxis <- function(startDate, n) {
-  # NOTE: this is subject to change depending on requirements
-  s <- startDate
-  y <- lubridate::year(s)
-  m <- lubridate::month(s)
-  ss <- zoo::yearmon(y + (m-1)/12)
-  offsets <- as.integer(0:(n-1)) / 12
-  return(ss + offsets)
+  return(addMonths(startDate, 0:(n-1)))
 }
 
 #' Creates an R posixCT time axis for use in e.g. xts indexing
