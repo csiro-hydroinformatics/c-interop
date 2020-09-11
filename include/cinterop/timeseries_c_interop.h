@@ -28,7 +28,7 @@ typedef struct _regular_time_series_geometry
 	date_time_to_second start; //!< First index of the time series.
 	int time_step_seconds; //!< Length of the time step for the time series e.g. 3600 for hourly time series
 	int length; //!< Size of the time series
-	time_step_code time_step_code; //!< Optional code of the time series for non-strictly fixed temporal periods, e.g. "monthly", possibly overriding the time_step_seconds property
+	::time_step_code time_step_code; //!< Optional code of the time series for non-strictly fixed temporal periods, e.g. "monthly", possibly overriding the time_step_seconds property
 } regular_time_series_geometry;
 
 /** \brief	C-struct interop information defining a multivariate time series with regular (fixed temporal period) time steps */
