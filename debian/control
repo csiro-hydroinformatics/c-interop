@@ -1,0 +1,28 @@
+Source: libcinterop-dev
+Maintainer: Jean-Michel Perraud <per202@csiro.au>
+Section: libdevel
+# Testsuite: autopkgtest-pkg-r
+Priority: optional
+Build-Depends: cmake,
+               debhelper-compat (= 13)
+Standards-Version: 4.5.0
+Homepage: https://github.com/csiro-hydroinformatics/rcpp-interop-commons
+#Vcs-Browser: https://salsa.debian.org/debian/moirai
+#Vcs-Git: https://salsa.debian.org/debian/moirai.git
+Rules-Requires-Root: no
+
+Package: libcinterop-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: ${misc:Depends}
+Conflicts: libcinterop-dev
+Description: Reusable functions for marshalling data between C, C++ and other programming languages -- header files
+ The idea is to have more consistency of vocabulary in interoperability 
+ glue code, using template-only C++, also avoiding code duplications across 
+ several projects I have (and others have, hopefully).
+ .
+ The code design also captures material that evolved over the years 
+ to prevent some "gotchas" one can get into when diving deep in native 
+ interop accross compilation modules.
+

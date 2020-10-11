@@ -1,0 +1,6 @@
+
+r-cinterop source: debian-rules-is-dh_make-template
+r-cinterop source: empty-short-license-in-dep5-copyright (line 10)
+r-cinterop source: missing-field-in-dep5-copyright Copyright (empty field, line 6)
+r-cinterop source: missing-field-in-dep5-copyright License (paragraph at line 6)
+r-cinterop source: no-debian-changes

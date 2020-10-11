@@ -1,0 +1,27 @@
+Source: r-cinterop
+Maintainer: Jean-Michel Perraud <per202@csiro.au>
+Section: gnu-r
+# Testsuite: autopkgtest-pkg-r
+Priority: optional
+Build-Depends: debhelper-compat (= 13),
+               dh-r,
+               r-base-dev
+Standards-Version: 4.5.0
+Homepage: https://github.com/csiro-hydroinformatics/rcpp-interop-commons
+#Vcs-Browser: https://salsa.debian.org/debian/moirai
+#Vcs-Git: https://salsa.debian.org/debian/moirai.git
+Rules-Requires-Root: no
+
+Package: r-cinterop
+Architecture: any
+# Depends: libcinterop-dev (= ${binary:Version}), # cannot use otherwise lintian version-substvar-for-external-package
+Depends: ${R:Depends},
+         ${shlibs:Depends},
+         ${misc:Depends},
+         libcinterop-dev (>= 1.1-1)
+Recommends: ${R:Recommends}
+Suggests: ${R:Suggests}
+Description: Reusable functions for marshalling data between C, C++ and other programming languages -- R package
+ Generic functions for data marshalling and interop with opaque pointers 
+ in a C API exposed to R packages via Rcpp enables bindings.
+
