@@ -9,8 +9,8 @@ cinterop R package
 
 # See also
 
-[C and C++ interop](https://github.com/jmp75/rcpp-interop-commons)
-[Rcpp wrapper generator](https://github.com/jmp75/rcpp-wrapper-generation)
+[C and C++ interop](https://github.com/csiro-hydroinformatics/rcpp-interop-commons)
+[Rcpp wrapper generator](https://github.com/csiro-hydroinformatics/rcpp-wrapper-generation)
 
 ```r
 library(roxygen2)

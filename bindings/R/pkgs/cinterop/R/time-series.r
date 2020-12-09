@@ -1,8 +1,9 @@
-createTsGeometry <- function(startTime, size, tStepSec) {
+createTsGeometry <- function(startTime, size, tStepSec, tStepCode=0L) {
   return(new('RegularTimeSeriesGeometry',
       Start=startTime, # POSIXct
       Length=size,
-      TimeStepSeconds=tStepSec))
+      TimeStepSeconds=tStepSec,
+      TimeStepCode=tStepCode))
 }
 
 #' Convert an xts object to a cinterop RegularTimeSeries object to be passed to a C API
@@ -47,6 +48,38 @@ asXtsTimeSeries <- function(tsInfo) {
   xts::xts(tsInfo@NumericData, makeTimeAxis(tsInfo@TsGeom))
 }
 
+
+addMth <- function(n, d) {
+  d %m+% lubridate::period(n, "month")
+}
+
+addMonths <- function(d, n) {
+  stopifnot(is.POSIXct(d)) #brutal, but clear.
+  if (length(n) == 1) {
+    addMth(n, d)
+  } else {
+    dates <- sapply(n, addMth, d)
+    tzattr <- tz(d)
+    class(dates) <- c("POSIXct", "POSIXt")
+    # do NOT use : tz(dates) <- tzattr
+    attr(dates, "tzone") <- tzattr
+    dates
+  }
+}
+
+#' Creates a vector that can be used as a monthly time series index for an xts series
+#'
+#' Creates a vector that can be used as a monthly time series index for an xts series
+#'
+#' @param startDate a date object such as a POSIXct
+#' @param n number of months
+#' @import zoo
+#' @import lubridate
+#' @export
+makeMonthlyTimeAxis <- function(startDate, n) {
+  return(addMonths(startDate, 0:(n-1)))
+}
+
 #' Creates an R posixCT time axis for use in e.g. xts indexing
 #'
 #' Creates an R posixCT time axis for use in e.g. xts indexing
@@ -57,9 +90,16 @@ asXtsTimeSeries <- function(tsInfo) {
 #' @export
 makeTimeAxis <- function(tsGeom) {
   stopifnot(is(tsGeom, "RegularTimeSeriesGeometry"))
-  deltaT <- lubridate::seconds(tsGeom@TimeStepSeconds) 
-  indices <- as.integer(0:(tsGeom@Length-1))
-  return(tsGeom@Start + indices * deltaT)
+  tStepCode <- tsGeom@TimeStepCode
+  s <- tsGeom@Start
+  if (tStepCode == 0L) {
+    deltaT <- lubridate::seconds(tsGeom@TimeStepSeconds) 
+    indices <- as.integer(0:(tsGeom@Length-1))
+    return(s + indices * deltaT)
+  } else if (tStepCode == 1L) { # monthly time step
+    # NOTE: this is subject to change depending on requirements
+    return(makeMonthlyTimeAxis(s, tsGeom@Length))
+  }
 }
 
 #' Gets the time series geometry of an xts, to be passed to a C API
@@ -78,8 +118,14 @@ getTsGeometry <- function(xtseries) {
   tstamps <- zoo::index(xtseries[1:2,])
   a <- tstamps[1]
   b <- tstamps[2]
-  tStep <- as.integer(lubridate::as.duration(lubridate::as.interval(b-a, a)))
-  tsGeom <- createTsGeometry(startTime=stats::start(xtseries), size=nrow(xtseries), tStepSec=tStep)
+  firstDelta <- lubridate::as.duration(lubridate::as.interval(b-a, a))
+  tStepCode <- 0L
+  tStep <- as.integer(firstDelta)
+  if (firstDelta > lubridate::ddays(27)){ # HACK: assume monthly
+    tStepCode <- 1L
+    tStep <- -1L
+  }
+  tsGeom <- createTsGeometry(startTime=a, size=nrow(xtseries), tStepSec=tStep, tStepCode=tStepCode)
   return(tsGeom)
 }
 

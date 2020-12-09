@@ -1,0 +1,4 @@
+r-cinterop: requires-r-api
+r-cinterop: initial-upload-closes-no-bugs
+r-cinterop: readme-debian-contains-debmake-template
+r-cinterop: synopsis-too-long

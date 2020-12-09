@@ -1,0 +1,2 @@
+# debian/libcinterop-dev/usr/include/cinterop/*.h*
+# debian/libcinterop-dev/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/*.pc    /usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/

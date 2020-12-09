@@ -26,4 +26,16 @@ test_that("conversion between xts and regulartimeseries", {
   expect_equal(9, nrow(x))
   expect_true(all(d == x))
 
+  monthlyAxis <- makeMonthlyTimeAxis(lubridate::origin, 9)
+  x <- xts::xts(d, monthlyAxis)
+  y <- asInteropRegularTimeSeries(x)
+  geom <- y@TsGeom
+  expect_equal(-1, geom@TimeStepSeconds)
+
+  x <- asXtsTimeSeries(y)
+  expect_equal(2, ncol(x))
+  expect_true(all(monthlyAxis == xts:::index.xts(x)))
+  expect_equal(9, nrow(x))
+  expect_true(all(d == x))
+
 })

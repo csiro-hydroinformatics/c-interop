@@ -1,6 +1,6 @@
 # Reusable functions for marshalling data between C, C++ and other programming languages
 
-[![license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/jmp75/rcpp-interop-commons/blob/master/LICENSE.txt)
+[![license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/csiro-hydroinformatics/rcpp-interop-commons/blob/master/LICENSE.txt)
 ![status](https://img.shields.io/badge/status-beta-blue.svg)
 
 The idea is to have more consistency of vocabulary in interoperability glue code, using template-only C++, also avoiding code duplications across several projects I have (and others have, hopefully).
@@ -42,5 +42,5 @@ CharacterVector cv = to_custom_character_vector<CharacterVector>(values, size, t
 
 ## Related work
 
-* [native interop clue code generation](https://github.com/jmp75/rcpp-wrapper-generation)
+* [native interop clue code generation](https://github.com/csiro-hydroinformatics/rcpp-wrapper-generation)
 * An R package pupetting the former - I have yet to open source it though.

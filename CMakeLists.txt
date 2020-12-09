@@ -1,20 +1,24 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.12)
 
 ## start setting
 SET (this_target cinterop)
-PROJECT(${this_target})
+set(TARGET_LIB_NAME cinterop)
+SET (this_target ${TARGET_LIB_NAME})
 
-SET (VERSION 1.0)
+set(TARGET_MAJOR 1)
+set(TARGET_MINOR 1)
+set(TARGET_RELEASE 1)
+set(TARGET_VERSION ${TARGET_MAJOR}.${TARGET_MINOR}.${TARGET_RELEASE})
+SET (VERSION ${TARGET_VERSION})
+
+PROJECT(${this_target} VERSION ${TARGET_VERSION} DESCRIPTION "Reusable functions for marshalling data between C, C++ and other programming languages")
+
+include(GNUInstallDirs)
 
 ## section: include directory
 INCLUDE_DIRECTORIES(
 	./include
 )
-
-## section: library directories
-LINK_DIRECTORIES(
-)
-
 
 ## section: source files
 # Add your source files here (one file per line), please SORT in alphabetical order for future maintenance
@@ -51,9 +55,6 @@ SET_SOURCE_FILES_PROPERTIES(${this_target}_HEADER_FILES
 LIST(APPEND ${this_target}_SOURCE_FILES ${${this_target}_HEADER_FILES})
 
 ## section: add definitions
-#   add prefix -D. example> -DSHP
-#  - DO NOT add  the following definitions(already defined in ${OSP_DEFINITIONS}:
-#   -DSHP, -DWIN32, -D_WINDOWS, -D_DEBUG, -D_USRDLL, -D_CRT_SECURE_NO_DEPRECATE
 ADD_DEFINITIONS(
     # -DCMAKE_CXX_FLAGS:STRING=' -std=c++11 '    
     )
@@ -62,15 +63,11 @@ ADD_DEFINITIONS(
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 ## section: add target
-# ADD_LIBRARY(${this_target} SHARED ${${this_target}_SOURCE_FILES} )
 add_library(${this_target} INTERFACE)
 
-## section: set link libraries
-# TARGET_LINK_LIBRARIES( ${this_target}
-# )
+configure_file(${TARGET_LIB_NAME}.pc.in ${TARGET_LIB_NAME}.pc @ONLY)
 
-
-# Files to be installed - used by packaging stuff below
+# Files to be installed
 INSTALL(FILES ${${this_target}_HEADER_FILES} DESTINATION include/cinterop)
 
 
@@ -85,16 +82,12 @@ add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 ########### End uninstall target ###############
 
-
-
 if(WIN32)
-  INSTALL(TARGETS ${this_target}
-    RUNTIME DESTINATION bin
-  )
 else()
-  INSTALL(TARGETS ${this_target}
-    LIBRARY DESTINATION lib
-  )
+  install(FILES ${CMAKE_BINARY_DIR}/${TARGET_LIB_NAME}.pc
+    # DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig) from examplar, but this appears not prevalent, most I see are under /usr/lib/x86_64-linux-gnu/pkgconfig, so:
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+    # The above also prevents a lintian error
 endif()
 
 # Packages - currently just an RPM
