@@ -65,6 +65,30 @@ def as_np_array_double(ffi:FFI, ptr:CffiData, size:int, shallow:bool=False) -> n
     else:
         return res.copy()
 
+def two_d_as_np_array_double(ffi:FFI, ptr:CffiData, nrow:int, ncol:int, shallow:bool=False) -> np.ndarray:
+    """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats.
+
+    Args:
+        ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
+        ptr (CffiData): cffi pointer (FFI.CData)
+        nrow (int): number of rows
+        ncol (int): number of columns 
+        shallow (bool): If true the array points directly to native data array. Defaults to False.
+
+    Raises:
+        RuntimeError: conversion is not supported
+
+    Returns:
+        np.ndarray: converted data
+    """
+    # TODO check type
+    rows = ffi.cast('double*[%d]' % (nrow,), ptr)
+    res = np.vstack([as_numeric_np_array(ffi, rows[i], size=ncol, shallow=True) for i in range(nrow)])
+    if shallow:
+        return res
+    else:
+        return res.copy()
+
 class CffiMarshal:
     """A helper class for marshalling data to/from a native library module (i.e. DLL)
     """    
@@ -102,6 +126,24 @@ class CffiMarshal:
             np.ndarray: converted data
         """    
         return as_np_array_double(self._ffi, ptr, size, shallow)
+
+    def two_d_as_np_array_double(self, ptr:CffiData, nrow:int, ncol:int, shallow:bool=False) -> np.ndarray:
+        """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats.
+
+        Args:
+            ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
+            ptr (CffiData): cffi pointer (FFI.CData)
+            nrow (int): number of rows
+            ncol (int): number of columns 
+            shallow (bool): If true the array points directly to native data array. Defaults to False.
+
+        Raises:
+            RuntimeError: conversion is not supported
+
+        Returns:
+            np.ndarray: converted data
+        """
+        return two_d_as_np_array_double(self._ffi, ptr, nrow, ncol, shallow)
 
 def as_bytes(obj:Any) -> Union[bytes, Any]:
     """Convert obj to bytes if it is a string type
