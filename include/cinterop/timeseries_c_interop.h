@@ -16,11 +16,11 @@
 #include "cinterop/common_c_interop.h"
 
 /** \brief	C-struct interop information describing the geometry of a time steps. Used to cater for strictly regular versus period varying ones (e.g. monthly)*/
-enum time_step_code
+typedef enum _time_step_code
 {
 	strictly_regular = 0,    //!< time steps can be expressed strictly with the same length e.g. 3600 seconds
 	monthly_step = 1 //!< monthly time stepping
-};
+} time_step_code;
 
 /** \brief	C-struct interop information describing the geometry of a time series with regular (fixed temporal period) time steps */
 typedef struct _regular_time_series_geometry
