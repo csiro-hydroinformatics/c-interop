@@ -2,7 +2,7 @@
 import numpy as np
 from functools import wraps
 
-from typing import Any, Union
+from typing import Any, List, Union
 from cffi import FFI
 import six
 
@@ -89,6 +89,40 @@ def two_d_as_np_array_double(ffi:FFI, ptr:CffiData, nrow:int, ncol:int, shallow:
     else:
         return res.copy()
 
+def c_string_as_py_string(ffi:FFI, ptr:CffiData) -> str:
+    """Convert if possible a cffi pointer to an ANSI C string <char*> to a python string.
+
+    Args:
+        ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
+        ptr (CffiData): cffi pointer (FFI.CData)
+
+    Raises:
+        RuntimeError: conversion is not supported
+
+    Returns:
+        str: converted string
+    """
+    return as_string(ffi.string(ptr))
+
+def character_vector_as_string_list(ffi:FFI, ptr:CffiData, size:int) -> List[str]:
+    """Convert if possible a cffi pointer to a C data array char** , into a list of python strings.
+
+    Args:
+        ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
+        ptr (CffiData): cffi pointer (FFI.CData)
+        size (int): number of character strings in the char** pointer
+
+    Raises:
+        RuntimeError: conversion is not supported
+
+    Returns:
+        List[str]: converted data
+    """
+    # TODO check type
+    strings = ffi.cast('char*[%d]' % (size,), ptr)
+    res = [as_string(ffi.string(strings[i])) for i in range(size)]
+    return res
+
 class CffiMarshal:
     """A helper class for marshalling data to/from a native library module (i.e. DLL)
     """    
@@ -144,6 +178,36 @@ class CffiMarshal:
             np.ndarray: converted data
         """
         return two_d_as_np_array_double(self._ffi, ptr, nrow, ncol, shallow)
+
+    def c_string_as_py_string(self, ptr:CffiData) -> str:
+        """Convert if possible a cffi pointer to an ANSI C string <char*> to a python string.
+
+        Args:
+            ptr (CffiData): cffi pointer (FFI.CData)
+
+        Raises:
+            RuntimeError: conversion is not supported
+
+        Returns:
+            str: converted string
+        """
+        return c_string_as_py_string(self._ffi, ptr)
+
+    def character_vector_as_string_list(self, ptr:CffiData, size:int) -> List[str]:
+        """Convert if possible a cffi pointer to a C data array char** , into a list of python strings.
+
+        Args:
+            ptr (CffiData): cffi pointer (FFI.CData)
+            size (int): number of character strings in the char** pointer
+
+        Raises:
+            RuntimeError: conversion is not supported
+
+        Returns:
+            List[str]: converted data
+        """
+        return character_vector_as_string_list(self._ffi, ptr, size)
+
 
 def as_bytes(obj:Any) -> Union[bytes, Any]:
     """Convert obj to bytes if it is a string type
