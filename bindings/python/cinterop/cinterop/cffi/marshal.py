@@ -5,6 +5,7 @@ from functools import wraps
 from typing import Any, List, Union
 from cffi import FFI
 import six
+from refcount.interop import OwningCffiNativeHandle
 
 # This is a Hack. I cannot use FFI.CData in type hints.
 CffiData = Any
@@ -141,8 +142,6 @@ def dtts_as_datetime(ffi:FFI, ptr:CffiData) -> datetime:
     dtts = ptr # ffi.cast('date_time_to_second*', ptr)
     return datetime(dtts.year, dtts.month, dtts.day, dtts.hour, dtts.minute, dtts.second)
 
-from refcount.interop import OwningCffiNativeHandle
-
 def datetime_to_dtts(ffi:FFI, dt: datetime) -> OwningCffiNativeHandle:
     ptr = ffi.new("date_time_to_second*")
     ptr.year = dt.year
@@ -152,6 +151,74 @@ def datetime_to_dtts(ffi:FFI, dt: datetime) -> OwningCffiNativeHandle:
     ptr.minute = dt.minute
     ptr.second = dt.second
     return OwningCffiNativeHandle(ptr)
+
+def as_bytes(obj:Any) -> Union[bytes, Any]:
+    """Convert obj to bytes if it is a string type
+
+    Args:
+        obj (Any): object to convert
+
+    Returns:
+        Union[bytes, Any]: object converted to bytes if it was a type of string
+    """    
+    if isinstance(obj, bytes):
+        return obj
+    elif isinstance(obj, six.string_types):
+        return obj.encode('utf-8')
+    else:
+        return obj
+
+def as_arrayof_bytes(obj:List[Any], ffi:FFI) -> List[bytes]:
+    """Convert a list of "strings" to a char** like C array
+
+    Args:
+        obj (List): list of objects (strings) to convert
+
+    Returns:
+        List: objects converted to bytes if it was a type of string
+    """
+    return [ffi.new("char[]", as_bytes(x)) for x in obj]
+
+def as_string(obj:Any) -> Union[str, Any]:
+    """Convert obj to string/unicode if it is a bytes object.
+
+    Args:
+        obj (Any): object to convert
+
+    Returns:
+        Union[str, Any]: result converted (or not) to unicode string
+    """
+    if isinstance(obj, bytes):
+        return obj.decode('utf-8')
+    return obj
+
+
+def convert_strings(func):
+    """Returns a wrapper that converts any str/unicode object arguments to
+       bytes.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        """Convert args.
+
+           :param func func: Python function wrapping a lakeoned function.
+        """
+        new_args = []
+        for arg in args:
+            new_args.append(as_bytes(arg))
+        new_kwargs = {}
+        for key in kwargs:
+            new_kwargs[key] = as_bytes(kwargs[key])
+
+        # Call the function
+        return_value = func(*new_args, **new_kwargs)
+        if isinstance(return_value, (list, tuple)):
+            return [as_string(obj) for obj in return_value]
+        else:
+            return as_string(return_value)
+
+    return wrapper
+
 
 class CffiMarshal:
     """A helper class for marshalling data to/from a native library module (i.e. DLL)
@@ -238,7 +305,6 @@ class CffiMarshal:
         """
         return character_vector_as_string_list(self._ffi, ptr, size)
 
-
     def as_datetime(self, ptr:CffiData) -> datetime:
         """Convert if possible a cffi pointer to a C date_time_to_second struct, into a datetime
 
@@ -256,6 +322,9 @@ class CffiMarshal:
     def datetime_to_dtts(self, dt: datetime) -> OwningCffiNativeHandle:
         return datetime_to_dtts(self._ffi, dt)
 
+    def as_arrayof_bytes(self, obj:List[Any]) -> List[bytes]:
+        """Convert a list of "strings" to a char** like C array"""
+        return as_arrayof_bytes(obj, self._ffi)
 
 
 def as_bytes(obj:Any) -> Union[bytes, Any]:
@@ -286,31 +355,3 @@ def as_string(obj:Any) -> Union[str, Any]:
     if isinstance(obj, bytes):
         return obj.decode('utf-8')
     return obj
-
-
-def convert_strings(func):
-    """Returns a wrapper that converts any str/unicode object arguments to
-       bytes.
-    """
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        """Convert args.
-
-           :param func func: Python function wrapping a lakeoned function.
-        """
-        new_args = []
-        for arg in args:
-            new_args.append(as_bytes(arg))
-        new_kwargs = {}
-        for key in kwargs:
-            new_kwargs[key] = as_bytes(kwargs[key])
-
-        # Call the function
-        return_value = func(*new_args, **new_kwargs)
-        if isinstance(return_value, (list, tuple)):
-            return [as_string(obj) for obj in return_value]
-        else:
-            return as_string(return_value)
-
-    return wrapper
-
