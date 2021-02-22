@@ -123,6 +123,36 @@ def character_vector_as_string_list(ffi:FFI, ptr:CffiData, size:int) -> List[str
     res = [as_string(ffi.string(strings[i])) for i in range(size)]
     return res
 
+from datetime import datetime
+
+def dtts_as_datetime(ffi:FFI, ptr:CffiData) -> datetime:
+    """Convert if possible a cffi pointer to a C data array char** , into a list of python strings.
+
+    Args:
+        ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
+        ptr (CffiData): cffi pointer (FFI.CData)
+
+    Raises:
+        RuntimeError: conversion is not supported
+
+    Returns:
+        datetime: converted data
+    """
+    dtts = ptr # ffi.cast('date_time_to_second*', ptr)
+    return datetime(dtts.year, dtts.month, dtts.day, dtts.hour, dtts.minute, dtts.second)
+
+from refcount.interop import OwningCffiNativeHandle
+
+def datetime_to_dtts(ffi:FFI, dt: datetime) -> OwningCffiNativeHandle:
+    ptr = ffi.new("date_time_to_second*")
+    ptr.year = dt.year
+    ptr.month = dt.month
+    ptr.day = dt.day
+    ptr.hour = dt.hour
+    ptr.minute = dt.minute
+    ptr.second = dt.second
+    return OwningCffiNativeHandle(ptr)
+
 class CffiMarshal:
     """A helper class for marshalling data to/from a native library module (i.e. DLL)
     """    
@@ -209,6 +239,25 @@ class CffiMarshal:
         return character_vector_as_string_list(self._ffi, ptr, size)
 
 
+    def as_datetime(self, ptr:CffiData) -> datetime:
+        """Convert if possible a cffi pointer to a C date_time_to_second struct, into a datetime
+
+        Args:
+            ptr (CffiData): cffi pointer (FFI.CData)
+
+        Raises:
+            RuntimeError: conversion is not supported
+
+        Returns:
+            datetime: converted data
+        """
+        return dtts_as_datetime(self._ffi, ptr)
+
+    def datetime_to_dtts(self, dt: datetime) -> OwningCffiNativeHandle:
+        return datetime_to_dtts(self._ffi, dt)
+
+
+
 def as_bytes(obj:Any) -> Union[bytes, Any]:
     """Convert obj to bytes if it is a string type
 
@@ -224,8 +273,6 @@ def as_bytes(obj:Any) -> Union[bytes, Any]:
         return obj.encode('utf-8')
     else:
         return obj
-
-"""Convert obj to string/unicode if it is a bytes object."""
 
 def as_string(obj:Any) -> Union[str, Any]:
     """Convert obj to string/unicode if it is a bytes object.

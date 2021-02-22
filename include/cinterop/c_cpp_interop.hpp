@@ -14,6 +14,7 @@
 #include <vector>
 #include <map>
 #include <functional>
+#include <stdexcept>
 
 #include "cinterop/common_c_interop.h"
 #include "cinterop/c_interop_forward_decl.h"
