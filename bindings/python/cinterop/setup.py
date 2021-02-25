@@ -1,7 +1,7 @@
 """A package for reference counting and interop with native pointers
 
 See:
-https://github.com/jmp75/pycinterop
+https://github.com/csiro-hydroinformatics/rcpp-interop-commons
 """
 
 from setuptools import setup
@@ -26,23 +26,27 @@ else:
     raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE,))
 
 
-try:
-    import pypandoc
-    long_description = pypandoc.convert('README.md', 'rst')
-    long_description = long_description.replace("\r","") # Do not forget this line
-except:
-    print("Pandoc not found. Long_description conversion failure.")
-    # Get the long description from the README file
-    with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
-        long_description = f.read()
+# try:
+#     import pypandoc
+#     long_description = pypandoc.convert('README.md', 'rst')
+#     long_description = long_description.replace("\r","") # Do not forget this line
+#     long_description_content_type='text/markdown'
+# except:
+#     print("Pandoc not found. Long_description conversion failure.")
+#     # Get the long description from the README file
+#     with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
+#         long_description = f.read()
+#         long_description_content_type='text/markdown'
 
+with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
+    long_description_content_type='text/markdown'
 
 
 # with open(os.path.join(os.path.dirname(__file__), "requirements.txt"), "r") as f:
 #     REQUIREMENTS = f.read().splitlines()
 
-
-REQUIREMENTS = ['cffi']
+REQUIREMENTS = ['cffi', 'refcount']
 
 TEST_REQUIREMENTS = ['pytest',
                     #  'coveralls',
@@ -50,15 +54,18 @@ TEST_REQUIREMENTS = ['pytest',
                     #  'pytest-mpl'
                      ]
 
-CLASSIFIERS = ['Development Status :: 3 - Alpha',
+CLASSIFIERS = ['Development Status :: 4 - Beta',
                 'Intended Audience :: Developers',
                 'Topic :: Software Development ',
                 'Topic :: Software Development :: Object Brokering',  # ??
+                'Programming Language :: C++',
+                'Programming Language :: C',
+                'Topic :: Software Development :: Code Generators',
                 'License :: OSI Approved :: MIT License',
                 'Operating System :: OS Independent',
                 'Programming Language :: Python',
-                'Programming Language :: Python :: 2.7',
-                'Programming Language :: Python :: 3.6'
+                # 'Programming Language :: Python :: 2.7',
+                'Programming Language :: Python :: 3'
                 ]
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
@@ -66,9 +73,10 @@ CLASSIFIERS = ['Development Status :: 3 - Alpha',
 setup(
     name='cinterop',
     version=verstr,
-    description='A Python package for reference counting and interop with native pointers', 
+    description='A Python package for reusable interop with native resources from a C API', 
     long_description=long_description,
-    url='https://github.com/jmp75/pycinterop',
+    long_description_content_type=long_description_content_type,
+    url='https://github.com/csiro-hydroinformatics/rcpp-interop-commons',
     author='Jean-Michel Perraud',
     author_email='per202@csiro.au',
     classifiers=CLASSIFIERS,
@@ -123,9 +131,9 @@ setup(
     # maintainers, and where to support the project financially. The key is
     # what's used to render the link text on PyPI.
     project_urls={  # Optional
-        'Bug Reports': 'https://github.com/jmp75/pycinterop/issues',
+        'Bug Reports': 'https://github.com/csiro-hydroinformatics/rcpp-interop-commons/issues',
         # 'Funding': 'https://donate.pypi.org',
         # 'Say Thanks!': 'http://saythanks.io/to/example',
-        'Source': 'https://github.com/jmp75/pycinterop',
+        'Source': 'https://github.com/csiro-hydroinformatics/rcpp-interop-commons',
     },
 )
