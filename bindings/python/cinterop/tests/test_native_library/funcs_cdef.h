@@ -1,6 +1,11 @@
 
 void delete_char_array(char* ptr);
 
+void delete_charptr_array(char** ptr, int size);
+char** create_charpp(int* size);
+char* get_charpp_element(char** strings, int index);
+
+
 void set_date(date_time_to_second * start, int year, int month, int day, int hour, int min, int sec);
 int get_year(date_time_to_second start);
 date_time_to_second * create_date(int year, int month, int day, int hour, int min, int sec);

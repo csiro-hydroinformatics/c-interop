@@ -19,6 +19,28 @@ void delete_char_array(char* ptr)
     delete ptr;
 }
 
+
+void delete_charptr_array(char** ptr, int size){
+    for (size_t i = 0; i < size; i++)
+    {
+        delete[] ptr[i];
+    }
+    delete[] ptr;
+}
+
+char** create_charpp(int* size){
+    *size = 3;
+    char** res = new char*[3];
+    res[0] = STRDUP("a");
+    res[1] = STRDUP("b");
+    res[2] = STRDUP("c");
+    return res;
+}
+
+char* get_charpp_element(char** strings, int index){
+    return STRDUP(strings[index]);
+}
+
 void set_date(DTS_PTR start, int year, int month, int day, int hour, int min, int sec)
 {
     start->year = year;

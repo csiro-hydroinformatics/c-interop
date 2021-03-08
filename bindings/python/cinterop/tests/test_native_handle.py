@@ -40,6 +40,15 @@ ut_dll = ut_ffi.dlopen(native_lib_path, 1)  # Lazy loading
 
 marshal = CffiMarshal(ut_ffi)
 
+
+def test_charpp_returned():
+    size = marshal.new_int_scalar_ptr()
+    ptr = ut_dll.create_charpp(size)
+    ssm = marshal.c_charptrptr_as_string_list(ptr, size[0])
+    assert len(ssm) == 3
+    assert ssm[0] == "a"
+    ut_dll.delete_charptr_array(ptr, size[0])
+
 # /home/per202/src/github_jm/rcpp-interop-commons/include/cinterop/common_c_interop.h
 #   25,1: typedef struct _date_time_to_second
 def test_date_time_interop():
@@ -106,8 +115,47 @@ def test_string_string_map():
 #     # ssm = {"c":"C", "d":"D"}
 #     ssm_ptr = marshal.time_step_code(1)
 
+def _create_test_series_xr() -> xr.DataArray:
+    a = np.array([[1,2,3.0],[4,5,6.0]])
+    e = [1,2]
+    t = as_timestamp("2020-01-01")
+    time_index = create_even_time_index(t, 86400, 3)
+    data = create_ensemble_series(a, e, time_index)
+    return data
+
+def _create_test_series_pd_series() -> pd.Series:
+    a = np.array([1,2,3.0])
+    t = as_timestamp("2020-01-01")
+    time_index = create_even_time_index(t, 86400, 3)
+    return pd.Series(a, index=time_index)
+
+def _create_test_series_pd_df() -> pd.DataFrame:
+    a = np.array([[1,2,3.0],[4,5,6.0]]).transpose()
+    t = as_timestamp("2020-01-01")
+    time_index = create_even_time_index(t, 86400, 3)
+    return pd.DataFrame(a, index=time_index)
+
 #   26,1: typedef struct _regular_time_series_geometry
 def test_time_series_geometry():
+
+    xr_series = _create_test_series_xr()
+    g = get_tsgeom(xr_series)
+    assert g.length == 3
+    assert g.start == as_timestamp("2020-01-01")
+    assert g.time_step_seconds == 86400
+
+    pd_series = _create_test_series_pd_series()
+    g = get_tsgeom(pd_series)
+    assert g.length == 3
+    assert g.start == as_timestamp("2020-01-01")
+    assert g.time_step_seconds == 86400
+
+    pd_df = _create_test_series_pd_df()
+    g = get_tsgeom(pd_df)
+    assert g.length == 3
+    assert g.start == as_timestamp("2020-01-01")
+    assert g.time_step_seconds == 86400
+
     ptr = ut_dll.create_tsg()
     tsg = marshal.time_series_geometry(ptr)
     ut_dll.dispose_tsg(ptr)
@@ -118,6 +166,29 @@ def test_time_series_geometry():
 
 #   35,1: typedef struct _multi_regular_time_series_data
 def test_multi_regular_time_series_data():
+    data = _create_test_series_xr()
+    x = as_native_time_series(ut_ffi, data)
+    assert x.ptr.numeric_data[0][0] == 1.0
+    assert x.ptr.numeric_data[0][2] == 3.0
+    assert x.ptr.numeric_data[1][0] == 4.0
+    assert x.ptr.numeric_data[1][2] == 6.0
+    assert x.ptr.ensemble_size == 2
+
+    data = _create_test_series_pd_series()
+    x = as_native_time_series(ut_ffi, data)
+    assert x.ptr.numeric_data[0][0] == 1.0
+    assert x.ptr.numeric_data[0][1] == 2.0
+    assert x.ptr.numeric_data[0][2] == 3.0
+    assert x.ptr.ensemble_size == 1
+
+    data = _create_test_series_pd_df()
+    x = as_native_time_series(ut_ffi, data)
+    assert x.ptr.ensemble_size == 2
+    assert x.ptr.numeric_data[0][0] == 1.0
+    assert x.ptr.numeric_data[0][2] == 3.0
+    assert x.ptr.numeric_data[1][0] == 4.0
+    assert x.ptr.numeric_data[1][2] == 6.0
+
     ptr = ut_dll.create_mtsd()
     tsg = marshal.as_xarray_time_series(ptr)
     blah = tsg.dims
@@ -128,6 +199,7 @@ def test_multi_regular_time_series_data():
 #   69,1: typedef struct _multi_statistic_definition
 
 if __name__ == "__main__":
+    test_charpp_returned()
     test_date_time_interop()
     test_named_values_vector_interop()
     test_values_vector_interop()

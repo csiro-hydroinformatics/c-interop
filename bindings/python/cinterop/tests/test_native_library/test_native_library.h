@@ -61,6 +61,10 @@ extern "C"
 #endif
 
     TESTLIB_API void delete_char_array(char* ptr);
+    TESTLIB_API void delete_charptr_array(char** ptr, int size);
+
+    TESTLIB_API char** create_charpp(int* size);
+    TESTLIB_API char* get_charpp_element(char** strings, int index);
 
     TESTLIB_API void set_date(DTS_PTR start, int year, int month, int day, int hour, int min, int sec);
     TESTLIB_API DTS_PTR create_date(int year, int month, int day, int hour, int min, int sec);

@@ -1,18 +1,27 @@
 
+import cffi
 import numpy as np
 from functools import wraps
 
 from typing import Any, Dict, Iterable, List, Union
 from cffi import FFI
+from pandas.core.frame import DataFrame
 import six
 from refcount.interop import OwningCffiNativeHandle
 from datetime import datetime
 import xarray as xr
 import pandas as pd
+from xarray.core.dataarray import DataArray
 
 # This is a Hack. I cannot use FFI.CData in type hints.
 CffiData = Any
 """dummy type hint for FFI.CData"""
+
+ConvertibleToTimestamp = Union[str, datetime, np.datetime64, pd.Timestamp]
+"""Definition of a 'type' for type hints. 
+"""
+
+TimeSeriesLike = Union[pd.Series, pd.DataFrame, xr.DataArray]
 
 _c2dtype = dict()
 _c2dtype[ 'float *' ] = np.dtype( 'f4' )
@@ -22,13 +31,16 @@ _c2dtype[ 'double *' ] = np.dtype( 'f8' )
 def new_int_array(ffi, size) -> CffiData:
     return ffi.new('int[%d]' % (size,))
 
-def new_int_scalar_ptr(ffi, value:int) -> CffiData:
+def new_int_scalar_ptr(ffi, value:int=0) -> CffiData:
     ptr = ffi.new('int*')
     ptr[0] = value
     return ptr
 
 def new_double_array(ffi, size) -> CffiData:
     return ffi.new('double[%d]' % (size,))
+
+def new_doubleptr_array(ffi, size) -> CffiData:
+    return ffi.new('double*[%d]' % (size,))
 
 def new_charptr_array(ffi, size) -> CffiData:
     return ffi.new('char*[%d]' % (size,))
@@ -111,7 +123,7 @@ def named_values_to_dict(ffi:FFI, ptr:CffiData) -> Dict[str,float]:
 def dict_to_named_values(ffi:FFI, data:Dict[str,float]) -> OwningCffiNativeHandle:
     ptr = ffi.new("named_values_vector*")
     ptr.size = len(data)
-    ptr.values = as_c_double_array(ffi, list(data.values()))
+    ptr.values = as_c_double_array(ffi, list(data.values())).ptr
     names = as_arrayof_bytes(ffi, list(data.keys()))
     ptr.names = names.ptr
     result = OwningCffiNativeHandle(ptr)
@@ -173,9 +185,31 @@ def as_native_tsgeom(ffi:FFI, tsgeom:TimeSeriesGeometry) -> OwningCffiNativeHand
     ptr.time_step_code = tsgeom.time_step_code
     return OwningCffiNativeHandle(ptr)
 
-ConvertibleToTimestamp = Union[str, datetime, np.datetime64, pd.Timestamp]
-"""Definition of a 'type' for type hints. 
-"""
+
+def get_tsgeom(data:TimeSeriesLike) -> TimeSeriesGeometry:
+    if isinstance(data, xr.DataArray):
+        indx = data.coords[TIME_DIMNAME].values
+    elif isinstance(data, pd.Series):
+        indx = data.index
+    elif isinstance(data, pd.DataFrame):
+        indx = data.index
+    else:
+        raise TypeError(
+            "Not recognised as a type of time series: " + str(type(data)))
+    a = as_timestamp(indx[0])
+    b = as_timestamp(indx[1])
+    firstDelta = b-a
+    tStepCode = 0
+    tStep = int(firstDelta.total_seconds())
+    if tStep > 86400 * 27: # HACK: assume monthly
+        tStepCode = 1
+        tStep = -1
+    return TimeSeriesGeometry(a, tStep, len(indx), tStepCode)
+
+def get_native_tsgeom(ffi:FFI, pd_series:pd.Series) -> OwningCffiNativeHandle:
+    # stopifnot(xts::is.xts(pd_series))
+    return as_native_tsgeom(ffi, get_tsgeom(pd_series))
+
 
 def _is_convertible_to_timestamp(t: Any):
     return isinstance(t, str) or isinstance(t, datetime) or isinstance(t, np.datetime64) or isinstance(t, pd.Timestamp)
@@ -195,6 +229,15 @@ def as_timestamp(t: ConvertibleToTimestamp) -> pd.Timestamp:
 TIME_DIMNAME="time"
 ENSEMBLE_DIMNAME="ensemble"
 
+
+def create_ensemble_series(npx:np.ndarray, ens_index:List, time_index:List) -> xr.DataArray:
+    return xr.DataArray(npx, coords=[ens_index, time_index], dims=[ENSEMBLE_DIMNAME, TIME_DIMNAME])
+
+def create_even_time_index(start:ConvertibleToTimestamp, time_step_seconds:int, n:int) -> List:
+    start = as_timestamp(start)
+    delta_t = np.timedelta64(time_step_seconds, 's')
+    return [start + delta_t * i for i in range(n)]
+
 def as_xarray_time_series(ffi:FFI, ptr:CffiData) -> xr.DataArray:
     ts_geom = time_series_geometry(ffi, ptr.time_series_geometry)
     # npx = two_d_as_np_array_double(ffi, ptr.numeric_data, ts_geom.length, ptr.ensemble_size, True)
@@ -202,12 +245,35 @@ def as_xarray_time_series(ffi:FFI, ptr:CffiData) -> xr.DataArray:
     start = as_timestamp(ts_geom.start)
     if ts_geom.time_step_code > 0:
         raise NotImplementedError("Can only handle conversion of regular time steps, for now")
-    delta_t = np.timedelta64(ts_geom.time_step_seconds, 's')
-    time_index = [start + delta_t * i for i in range(ts_geom.length)]
+    time_index = create_even_time_index(start, ts_geom.time_step_seconds, ts_geom.length)
     ens_index = [i for i in range(ptr.ensemble_size)]
-    x = xr.DataArray(npx, coords=[ens_index, time_index], dims=[ENSEMBLE_DIMNAME, TIME_DIMNAME])
+    x = create_ensemble_series(npx, ens_index, time_index)
     # x.name = variableIdentifier
     return x
+
+def as_native_time_series(ffi:FFI, data:TimeSeriesLike) -> OwningCffiNativeHandle:
+    ptr = ffi.new("multi_regular_time_series_data*")
+    tsg = get_native_tsgeom(ffi, data)
+    ptr.time_series_geometry = tsg.obj
+    if isinstance(data, xr.DataArray):
+        ensemble_size = len(data.coords[ENSEMBLE_DIMNAME].values)
+        np_data = data.values
+    elif isinstance(data, pd.Series):
+        ensemble_size = 1
+        np_data = data.values
+    elif isinstance(data, pd.DataFrame):
+        ensemble_size = data.shape[1]
+        np_data = data.values.transpose()
+    else:
+        raise TypeError(
+            "Not recognised as a type of time series: " + str(type(data)))
+    ptr.ensemble_size = ensemble_size
+    num_data = two_d_np_array_double_to_native(ffi, np_data)
+    ptr.numeric_data = num_data.ptr
+    result = OwningCffiNativeHandle(ptr)
+    result.keepalive = [tsg, num_data]
+    return result
+
 
 def values_to_nparray(ffi:FFI, ptr:CffiData) -> np.ndarray:
     """Convert if possible a cffi pointer to a values_vector struct, into a python array
@@ -227,22 +293,24 @@ def values_to_nparray(ffi:FFI, ptr:CffiData) -> np.ndarray:
 def create_values_struct(ffi:FFI, data:np.ndarray) -> OwningCffiNativeHandle:
     ptr = ffi.new("values_vector*")
     ptr.size = len(data)
-    ptr.values = as_c_double_array(ffi, data)
+    ptr.values = as_c_double_array(ffi, data).ptr
     return OwningCffiNativeHandle(ptr)
 
-def as_c_double_array(ffi, data):
+def as_c_double_array(ffi:FFI, data:np.ndarray) -> OwningCffiNativeHandle:
     if isinstance(data, list):
         data = np.asfarray(data)
+    elif isinstance(data, xr.DataArray):
+        data = data.values
     elif not isinstance(data, np.ndarray):
-        raise TypeError("Conversion to a c array of double requires list of np array as input")
-    return ffi.cast("double *", np.ascontiguousarray(data.ctypes.data))
+        raise TypeError("Conversion to a c array of double requires list or np array as input")
+    return OwningCffiNativeHandle(ffi.cast("double *", np.ascontiguousarray(data.ctypes.data)))
 
-def as_c_char_array(ffi, data):
+def as_c_char_array(ffi, data) -> OwningCffiNativeHandle:
     if isinstance(data, list):
         data = np.asfarray(data)
     elif not isinstance(data, np.ndarray):
-        raise TypeError("Conversion to a c array of double requires list of np array as input")
-    return ffi.cast("double *", np.ascontiguousarray(data.ctypes.data))
+        raise TypeError("Conversion to a c array of double requires list or np array as input")
+    return OwningCffiNativeHandle(ffi.cast("char *", np.ascontiguousarray(data.ctypes.data)))
 
 def two_d_as_np_array_double(ffi:FFI, ptr:CffiData, nrow:int, ncol:int, shallow:bool=False) -> np.ndarray:
     """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats.
@@ -267,6 +335,38 @@ def two_d_as_np_array_double(ffi:FFI, ptr:CffiData, nrow:int, ncol:int, shallow:
         return res
     else:
         return res.copy()
+
+def two_d_np_array_double_to_native(ffi:FFI, data:np.ndarray, shallow:bool=False) -> OwningCffiNativeHandle:
+    """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats.
+
+    Args:
+        ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
+        data (np.ndarray): data
+        shallow (bool): If true the array points directly to native data array. Defaults to False.
+
+    Raises:
+        RuntimeError: conversion is not supported
+
+    Returns:
+        np.ndarray: converted data
+    """
+    if not isinstance(data, np.ndarray):
+        raise TypeError(
+            "Expected np.ndarray, got " + str(type(data)))
+    if not len(data.shape) < 3:
+        raise TypeError("Expected an array of dimension 1 or 2, got " + str(len(data.shape)))
+
+    if len(data.shape) == 1:
+        data = data.reshape((1, len(data)))
+
+    nrow = data.shape[0]
+    ptr = new_doubleptr_array(ffi, nrow)
+    items = [as_c_double_array(ffi, data[i,:]).ptr for i in range(nrow)]
+    for i in range(nrow):
+        ptr[i] = items[i]
+    result = OwningCffiNativeHandle(ptr)
+    result.keepalive = items
+    return result
 
 def c_string_as_py_string(ffi:FFI, ptr:CffiData) -> str:
     """Convert if possible a cffi pointer to an ANSI C string <char*> to a python string.
@@ -488,6 +588,9 @@ class CffiMarshal:
     def new_int_array(self, size) -> CffiData:
         return new_int_array(self._ffi, size)
 
+    def new_int_scalar_ptr(self, value:int=0) -> CffiData:
+        return new_int_scalar_ptr(self._ffi, value)
+
     def c_charptrptr_as_string_list(self, ptr:CffiData, size:int) -> List[str]:
         """Convert if possible a cffi pointer to a C data array char** , into a list of python strings.
 
@@ -602,7 +705,18 @@ class CffiMarshal:
     def as_xarray_time_series(self, ptr:CffiData) -> xr.DataArray:
         return as_xarray_time_series(self._ffi, ptr)
 
+    def get_native_tsgeom(self, pd_series:pd.Series) -> OwningCffiNativeHandle:
+        return get_native_tsgeom(self._ffi, pd_series)
+
+    def as_c_double_array(self, data:np.ndarray) -> OwningCffiNativeHandle:
+        return as_c_double_array(self._ffi, data)
     
+    def as_c_char_array(self, data:np.ndarray) -> OwningCffiNativeHandle:
+        return as_c_char_array(self._ffi, data)
+
+    def as_native_time_series(self, data:TimeSeriesLike) -> OwningCffiNativeHandle:
+        return as_native_time_series(self._ffi, data)
+
 
 
 def as_bytes(obj:Any) -> Union[bytes, Any]:
