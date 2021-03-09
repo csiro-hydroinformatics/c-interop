@@ -1,17 +1,14 @@
 
-import cffi
 import numpy as np
 from functools import wraps
 
 from typing import Any, Dict, Iterable, List, Union
 from cffi import FFI
-from pandas.core.frame import DataFrame
 import six
 from refcount.interop import OwningCffiNativeHandle
 from datetime import datetime
 import xarray as xr
 import pandas as pd
-from xarray.core.dataarray import DataArray
 
 # This is a Hack. I cannot use FFI.CData in type hints.
 CffiData = Any
@@ -163,28 +160,73 @@ def dict_to_string_map(ffi:FFI, data:Dict[str,str]) -> OwningCffiNativeHandle:
     return result
 
 class TimeSeriesGeometry:
-    def __init__(self, start: datetime, time_step_seconds:int, length:int, time_step_code:int):
-        self.start = start
+    def __init__(self, start:ConvertibleToTimestamp=None, time_step_seconds:int=0, length:int=1, time_step_code:int=0):
+        self.start = start if start is not None else as_pydatetime("1970-01-01")
         self.time_step_seconds = time_step_seconds
         self.length = length
         self.time_step_code = time_step_code
 
-def time_series_geometry(ffi:FFI, ptr:CffiData) -> TimeSeriesGeometry:
-    return TimeSeriesGeometry(
-        dtts_as_datetime(ffi, ptr.start),
-        ptr.time_step_seconds, 
-        ptr.length, 
-        ptr.time_step_code)
+    def as_native(self, ffi:FFI):
+        return TimeSeriesGeometryNative(ffi, self.start, self.time_step_seconds, self.length, self.time_step_code)
 
-def as_native_tsgeom(ffi:FFI, tsgeom:TimeSeriesGeometry) -> OwningCffiNativeHandle:
-    ptr = ffi.new("regular_time_series_geometry*")
-    dtts = datetime_to_dtts(ffi, tsgeom.start)
-    ptr.start = dtts.obj
-    ptr.time_step_seconds = tsgeom.time_step_seconds 
-    ptr.length = tsgeom.length
-    ptr.time_step_code = tsgeom.time_step_code
-    return OwningCffiNativeHandle(ptr)
+class TimeSeriesGeometryNative(OwningCffiNativeHandle):
+    def __init__(self, ffi:FFI, start:ConvertibleToTimestamp=None, time_step_seconds:int=0, length:int=1, time_step_code:int=0):
+        if isinstance(ffi, FFI.CData): # HACK? rethink
+            super(TimeSeriesGeometryNative, self).__init__(
+                ffi, "regular_time_series_geometry*", 0 
+            )
+        else:
+            ptr = ffi.new("regular_time_series_geometry*")
+            super(TimeSeriesGeometryNative, self).__init__(
+                ptr, "regular_time_series_geometry*", 0 
+            )
+            self.start = start if start is not None else as_pydatetime("1970-01-01")
+            self.time_step_seconds = time_step_seconds
+            self.length = length
+            self.time_step_code = time_step_code
 
+    @property
+    def start(self) -> datetime:
+        return dtts_as_datetime(self._handle.start)
+
+    @start.setter
+    def start(self, value):
+        dt = as_pydatetime(value)
+        _copy_datetime_to_dtts(dt, self._handle.start)
+
+    @property
+    def time_step_seconds(self) -> int:
+        return self._handle.time_step_seconds
+
+    @time_step_seconds.setter
+    def time_step_seconds(self, value:int):
+        self._handle.time_step_seconds = value
+
+    @property
+    def length(self) -> int:
+        return self._handle.length
+
+    @length.setter
+    def length(self, value:int):
+        self._handle.length = value
+
+    @property
+    def time_step_code(self) -> int:
+        return self._handle.time_step_code
+
+    @time_step_code.setter
+    def time_step_code(self, value:int):
+        self._handle.time_step_code = value
+
+# def time_series_geometry(ffi:FFI, ptr:CffiData) -> TimeSeriesGeometry:
+#     return TimeSeriesGeometry(
+#         dtts_as_datetime(ffi, ptr.start),
+#         ptr.time_step_seconds, 
+#         ptr.length, 
+#         ptr.time_step_code)
+
+def as_native_tsgeom(ffi:FFI, tsgeom:TimeSeriesGeometry) -> TimeSeriesGeometryNative:
+    return tsgeom.as_native(ffi)
 
 def get_tsgeom(data:TimeSeriesLike) -> TimeSeriesGeometry:
     if isinstance(data, xr.DataArray):
@@ -226,6 +268,10 @@ def as_timestamp(t: ConvertibleToTimestamp) -> pd.Timestamp:
             "Cannot convert to a timestamp the object of type" + str(type(t)))
 
 
+def as_pydatetime(t: ConvertibleToTimestamp) -> datetime:
+    return as_timestamp(t).to_pydatetime()
+
+
 TIME_DIMNAME="time"
 ENSEMBLE_DIMNAME="ensemble"
 
@@ -233,23 +279,44 @@ ENSEMBLE_DIMNAME="ensemble"
 def create_ensemble_series(npx:np.ndarray, ens_index:List, time_index:List) -> xr.DataArray:
     return xr.DataArray(npx, coords=[ens_index, time_index], dims=[ENSEMBLE_DIMNAME, TIME_DIMNAME])
 
+def create_single_series(npx:np.ndarray, time_index:List) -> xr.DataArray:
+    npx = npx.squeeze()
+    assert len(npx.shape) == 1
+    return xr.DataArray(npx, coords=[time_index], dims=[TIME_DIMNAME])
+
+def pd_series_to_xr_series(series:pd.Series) -> xr.DataArray:
+    return create_single_series(series.values, series.index)
+
 def create_even_time_index(start:ConvertibleToTimestamp, time_step_seconds:int, n:int) -> List:
     start = as_timestamp(start)
     delta_t = np.timedelta64(time_step_seconds, 's')
     return [start + delta_t * i for i in range(n)]
 
-def as_xarray_time_series(ffi:FFI, ptr:CffiData) -> xr.DataArray:
-    ts_geom = time_series_geometry(ffi, ptr.time_series_geometry)
-    # npx = two_d_as_np_array_double(ffi, ptr.numeric_data, ts_geom.length, ptr.ensemble_size, True)
-    npx = two_d_as_np_array_double(ffi, ptr.numeric_data, ptr.ensemble_size, ts_geom.length, True)
+def ts_geom_to_even_time_index(ts_geom:TimeSeriesGeometryNative) -> List:
     start = as_timestamp(ts_geom.start)
     if ts_geom.time_step_code > 0:
         raise NotImplementedError("Can only handle conversion of regular time steps, for now")
-    time_index = create_even_time_index(start, ts_geom.time_step_seconds, ts_geom.length)
+    return create_even_time_index(start, ts_geom.time_step_seconds, ts_geom.length)
+
+def as_xarray_time_series(ffi:FFI, ptr:CffiData) -> xr.DataArray:
+    ts_geom = TimeSeriesGeometryNative(ptr.time_series_geometry)
+    # npx = two_d_as_np_array_double(ffi, ptr.numeric_data, ts_geom.length, ptr.ensemble_size, True)
+    npx = two_d_as_np_array_double(ffi, ptr.numeric_data, ptr.ensemble_size, ts_geom.length, True)
+    time_index = ts_geom_to_even_time_index(ts_geom)
     ens_index = [i for i in range(ptr.ensemble_size)]
     x = create_ensemble_series(npx, ens_index, time_index)
     # x.name = variableIdentifier
     return x
+
+def geom_to_xarray_time_series(ts_geom:TimeSeriesGeometryNative, data:np.ndarray) -> xr.DataArray:
+    assert len(data.shape) == 1
+    data = data.reshape((1, len(data)))
+    time_index = ts_geom_to_even_time_index(ts_geom)
+    ens_index = [0]
+    x = create_ensemble_series(data, ens_index, time_index)
+    # x.name = variableIdentifier
+    return x
+
 
 def as_native_time_series(ffi:FFI, data:TimeSeriesLike) -> OwningCffiNativeHandle:
     ptr = ffi.new("multi_regular_time_series_data*")
@@ -402,11 +469,10 @@ def c_charptrptr_as_string_list(ffi:FFI, ptr:CffiData, size:int) -> List[str]:
     res = [as_string(ffi.string(strings[i])) for i in range(size)]
     return res
 
-def dtts_as_datetime(ffi:FFI, ptr:CffiData) -> datetime:
+def dtts_as_datetime(ptr:CffiData) -> datetime:
     """Convert if possible a cffi pointer to a C data array char** , into a list of python strings.
 
     Args:
-        ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
         ptr (CffiData): cffi pointer (FFI.CData)
 
     Raises:
@@ -418,14 +484,17 @@ def dtts_as_datetime(ffi:FFI, ptr:CffiData) -> datetime:
     dtts = ptr # ffi.cast('date_time_to_second*', ptr)
     return datetime(dtts.year, dtts.month, dtts.day, dtts.hour, dtts.minute, dtts.second)
 
-def datetime_to_dtts(ffi:FFI, dt: datetime) -> OwningCffiNativeHandle:
-    ptr = ffi.new("date_time_to_second*")
+def _copy_datetime_to_dtts(dt: datetime, ptr):
     ptr.year = dt.year
     ptr.month = dt.month
     ptr.day = dt.day
     ptr.hour = dt.hour
     ptr.minute = dt.minute
     ptr.second = dt.second
+
+def datetime_to_dtts(ffi:FFI, dt: datetime) -> OwningCffiNativeHandle:
+    ptr = ffi.new("date_time_to_second*")
+    _copy_datetime_to_dtts(dt, ptr)
     return OwningCffiNativeHandle(ptr)
 
 def as_bytes(obj:Any) -> Union[bytes, Any]:
@@ -632,7 +701,7 @@ class CffiMarshal:
         Returns:
             datetime: converted data
         """
-        return dtts_as_datetime(self._ffi, ptr)
+        return dtts_as_datetime(ptr)
 
     def datetime_to_dtts(self, dt: datetime) -> OwningCffiNativeHandle:
         return datetime_to_dtts(self._ffi, dt)
@@ -699,14 +768,17 @@ class CffiMarshal:
     def time_series_geometry(self, ptr:CffiData) -> TimeSeriesGeometry:
         return time_series_geometry(self._ffi, ptr)
 
-    def as_native_tsgeom(self, tsgeom:TimeSeriesGeometry) -> OwningCffiNativeHandle:
-        return as_native_tsgeom(self._ffi, tsgeom)
+    def as_native_tsgeom(self, tsgeom:TimeSeriesGeometry) -> TimeSeriesGeometryNative:
+        return tsgeom.as_native(self._ffi)
 
     def as_xarray_time_series(self, ptr:CffiData) -> xr.DataArray:
         return as_xarray_time_series(self._ffi, ptr)
 
     def get_native_tsgeom(self, pd_series:pd.Series) -> OwningCffiNativeHandle:
         return get_native_tsgeom(self._ffi, pd_series)
+
+    def new_native_tsgeom(self) -> TimeSeriesGeometryNative:
+        return TimeSeriesGeometryNative(self._ffi)
 
     def as_c_double_array(self, data:np.ndarray) -> OwningCffiNativeHandle:
         return as_c_double_array(self._ffi, data)

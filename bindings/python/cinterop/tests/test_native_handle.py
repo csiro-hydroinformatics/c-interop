@@ -157,9 +157,8 @@ def test_time_series_geometry():
     assert g.time_step_seconds == 86400
 
     ptr = ut_dll.create_tsg()
-    tsg = marshal.time_series_geometry(ptr)
+    assert ptr.time_step_code == 0
     ut_dll.dispose_tsg(ptr)
-    assert tsg.time_step_code == 0
     tsg = TimeSeriesGeometry(datetime(2010,5,4,3,2,1), 3600, 24, 0)
     tsg_ptr = marshal.as_native_tsgeom(tsg)
     assert ut_dll.tscode_tsg(tsg_ptr.obj) == 0
