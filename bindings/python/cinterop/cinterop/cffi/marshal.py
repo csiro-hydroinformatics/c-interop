@@ -271,10 +271,85 @@ def as_timestamp(t: ConvertibleToTimestamp) -> pd.Timestamp:
 def as_pydatetime(t: ConvertibleToTimestamp) -> datetime:
     return as_timestamp(t).to_pydatetime()
 
+## TODO: Generic, non interop time series functions should go "elsewhere"
 
 TIME_DIMNAME="time"
 ENSEMBLE_DIMNAME="ensemble"
 
+def xr_ts_start(x:xr.DataArray):
+    return x.coords[TIME_DIMNAME].values[0]
+
+def xr_ts_end(x:xr.DataArray):
+    return x.coords[TIME_DIMNAME].values[-1]
+
+def _time_interval_indx(dt:np.ndarray, from_date: pd.Timestamp = None, to_date: pd.Timestamp = None) -> np.ndarray:
+    tt = np.empty_like(dt, np.bool)
+    tt[:] = True
+    if from_date is not None:
+        tt = np.logical_and(tt, (dt >= np.datetime64(from_date)))
+    if to_date is not None:
+        tt = np.logical_and(tt, (dt <= np.datetime64(to_date)))
+    return tt
+
+def slice_xr_time_series(data: xr.DataArray, from_date: pd.Timestamp = None, to_date: pd.Timestamp = None) -> xr.DataArray:
+    """Subset a time series to a period
+
+    Args:
+        data (xr.DataArray): input xarray time series
+        from_date (pd.Timestamp, optional): date, convertible to a timestamp. Defaults to None.
+        to_date (pd.Timestamp, optional): end date of the slice. Inclusive. Defaults to None.
+
+    Returns:
+        xr.DataArray: a subset time series
+
+    Examples:
+        slice_xr_time_series(unaccounted_indus, from_date='1980-04-01', to_date='2000-04-01')
+    """
+    dt = data.time.values
+    tt = _time_interval_indx(dt, from_date, to_date)
+    return data.sel(time=tt)
+
+def slice_pd_time_series(data: pd.Series, from_date: pd.Timestamp = None, to_date: pd.Timestamp = None) -> pd.Series:
+    """Subset a time series to a period
+
+    Args:
+        data (pd.Series): input xarray time series
+        from_date (pd.Timestamp, optional): date, convertible to a timestamp. Defaults to None.
+        to_date (pd.Timestamp, optional): end date of the slice. Inclusive. Defaults to None.
+
+    Returns:
+        pd.Series: a subset time series
+
+    Examples:
+        slice_pd_time_series(unaccounted_indus, from_date='1980-04-01', to_date='2000-04-01')
+    """
+    dt = data.index
+    tt = _time_interval_indx(dt, from_date, to_date)
+    return data[tt]
+
+def ts_window(ts:Union[xr.DataArray, pd.Series], from_date: pd.Timestamp = None, to_date: pd.Timestamp = None):
+    if isinstance(ts, xr.DataArray):
+        return slice_xr_time_series(ts, from_date, to_date)
+    elif isinstance(ts, pd.Series):
+        return slice_pd_time_series(ts, from_date, to_date)
+    else:
+        raise TypeError("Not supported: " + str(type(ts)))
+
+def start_ts(ts:Union[xr.DataArray, pd.Series]):
+    if isinstance(ts, xr.DataArray):
+        return xr_ts_start(ts)
+    elif isinstance(ts, pd.Series):
+        return ts.index[0]
+    else:
+        raise TypeError("Not supported: " + str(type(ts)))
+
+def end_ts(ts:Union[xr.DataArray, pd.Series]):
+    if isinstance(ts, xr.DataArray):
+        return xr_ts_end(ts)
+    elif isinstance(ts, pd.Series):
+        return ts.index[-1]
+    else:
+        raise TypeError("Not supported: " + str(type(ts)))
 
 def create_ensemble_series(npx:np.ndarray, ens_index:List, time_index:List) -> xr.DataArray:
     return xr.DataArray(npx, coords=[ens_index, time_index], dims=[ENSEMBLE_DIMNAME, TIME_DIMNAME])
