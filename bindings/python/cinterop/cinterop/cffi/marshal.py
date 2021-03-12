@@ -855,6 +855,9 @@ class CffiMarshal:
     def new_native_tsgeom(self) -> TimeSeriesGeometryNative:
         return TimeSeriesGeometryNative(self._ffi)
 
+    def new_native_struct(self, type) -> OwningCffiNativeHandle:
+        return OwningCffiNativeHandle(self._ffi.new(type), type)
+
     def as_c_double_array(self, data:np.ndarray) -> OwningCffiNativeHandle:
         return as_c_double_array(self._ffi, data)
     
