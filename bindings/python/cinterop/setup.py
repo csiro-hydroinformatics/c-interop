@@ -81,7 +81,7 @@ setup(
     author_email='per202@csiro.au',
     classifiers=CLASSIFIERS,
     keywords='interop python native-libraries reference-counting handle cffi',
-    packages=['cinterop'],
+    packages=['cinterop', 'cinterop.cffi'],
     install_requires=REQUIREMENTS,
     # extras_require={
     #     ':python_version >= "3.6"': [
