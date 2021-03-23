@@ -46,7 +46,13 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 # with open(os.path.join(os.path.dirname(__file__), "requirements.txt"), "r") as f:
 #     REQUIREMENTS = f.read().splitlines()
 
-REQUIREMENTS = ['cffi', 'refcount']
+REQUIREMENTS = [
+    'cffi', 
+    'refcount', 
+    'xarray',
+    'numpy',
+    'pandas',
+]
 
 TEST_REQUIREMENTS = ['pytest',
                     #  'coveralls',
