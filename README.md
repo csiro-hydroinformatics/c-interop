@@ -42,5 +42,5 @@ CharacterVector cv = to_custom_character_vector<CharacterVector>(values, size, t
 
 ## Related work
 
-* [native interop clue code generation](https://github.com/csiro-hydroinformatics/rcpp-wrapper-generation)
+* [native interop glue code generation](https://github.com/csiro-hydroinformatics/c-api-wrapper-generation)
 * An R package pupetting the former - I have yet to open source it though.
