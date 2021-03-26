@@ -1,4 +1,4 @@
-libcinterop-dev (1.1-1) unstable; urgency=medium
+cinterop (1.1-1) unstable; urgency=medium
 
   * Initial release, testing debian packaging
 

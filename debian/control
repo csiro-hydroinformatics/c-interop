@@ -1,4 +1,4 @@
-Source: libcinterop-dev
+Source: cinterop
 Maintainer: Jean-Michel Perraud <per202@csiro.au>
 Section: libdevel
 # Testsuite: autopkgtest-pkg-r

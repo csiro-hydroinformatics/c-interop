@@ -1,8 +1,8 @@
 
-#libcinterop-dev source: source-is-missing build/*
+#cinterop source: source-is-missing build/*
 
-#libcinterop-dev source: source-is-missing obj-*/*
+#cinterop source: source-is-missing obj-*/*
 
-libcinterop-dev source: debian-rules-is-dh_make-template
+cinterop source: debian-rules-is-dh_make-template
 
-libcinterop-dev source: source-contains-cmake-cache-file build/CMakeCache.txt
+cinterop source: source-contains-cmake-cache-file build/CMakeCache.txt

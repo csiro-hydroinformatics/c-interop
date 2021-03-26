@@ -1,7 +1,5 @@
 # Building Debian packages
 
-Adapted from [this](https://github.com/csiro-hydroinformatics/cinterop/blob/master/doc/debian-packaging.md)
-
 ## Notes
 
 ```sh
