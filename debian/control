@@ -15,8 +15,8 @@ Package: libcinterop-dev
 Section: libdevel
 Architecture: any
 Multi-Arch: same
-Depends: ${misc:Depends}
-Conflicts: libcinterop-dev
+Depends: ${misc:Depends}, ${shlibs:Depends}
+# Conflicts: libcinterop-dev
 Description: Reusable functions for marshalling data between C, C++ and other programming languages -- header files
  The idea is to have more consistency of vocabulary in interoperability 
  glue code, using template-only C++, also avoiding code duplications across 
