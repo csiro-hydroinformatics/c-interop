@@ -1,2 +1,6 @@
-# debian/libcinterop-dev/usr/include/cinterop/*.h*
-# debian/libcinterop-dev/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/*.pc    /usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/
+usr/include/cinterop/*.h*
+# This worked fine on debian bullseye, not on Ubuntu an bionic VM
+# usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/*.pc    /usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/
+# usr/lib/*/pkgconfig/*.pc # not working 
+# Ubuntu VM seems to require:
+usr/lib/x86_64-linux-gnu/pkgconfig/*.pc   /usr/lib/x86_64-linux-gnu/pkgconfig/

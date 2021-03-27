@@ -4,7 +4,7 @@ Section: libdevel
 # Testsuite: autopkgtest-pkg-r
 Priority: optional
 Build-Depends: cmake,
-               debhelper-compat (= 13)
+               debhelper-compat (= 11)
 Standards-Version: 4.5.0
 Homepage: https://github.com/csiro-hydroinformatics/rcpp-interop-commons
 #Vcs-Browser: https://salsa.debian.org/debian/moirai
