@@ -12,3 +12,10 @@ DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 override_dh_auto_configure:
 	dh_auto_configure -- \
 	-DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH)
+
+# https://askubuntu.com/a/712634
+# without this override, I get a:
+# dh_install: Cannot find (any matches for) "usr/include/cinterop/*.h*" (tried in ., debian/tmp)
+# dh_install works if you have several packages, but seems to loose the plot if only one because there is no debian/tmp folder created
+override_dh_install:
+	@echo "skip dh_install"

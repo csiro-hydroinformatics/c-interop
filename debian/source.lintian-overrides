@@ -6,3 +6,13 @@
 cinterop source: debian-rules-is-dh_make-template
 
 cinterop source: source-contains-cmake-cache-file build/CMakeCache.txt
+
+cinterop source: debhelper-compat-file-is-missing
+cinterop source: package-uses-deprecated-debhelper-compat-version 1
+cinterop source: package-uses-debhelper-but-lacks-build-depends
+cinterop source: missing-build-dependency debhelper
+cinterop source: missing-field-in-dep5-copyright license
+cinterop source: missing-field-in-dep5-copyright copyright
+cinterop source: empty-short-license-in-dep5-copyright
+cinterop source: newer-standards-version 4.5.0 (current is 4.1.4)
+
