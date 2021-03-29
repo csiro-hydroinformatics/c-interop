@@ -3,7 +3,7 @@ Maintainer: Jean-Michel Perraud <per202@csiro.au>
 Section: gnu-r
 # Testsuite: autopkgtest-pkg-r
 Priority: optional
-Build-Depends: debhelper-compat (= 13),
+Build-Depends: debhelper-compat (= 11),
                dh-r,
                r-base-dev
 Standards-Version: 4.5.0
