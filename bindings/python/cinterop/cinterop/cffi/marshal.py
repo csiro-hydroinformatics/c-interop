@@ -5,7 +5,7 @@ from functools import wraps
 from typing import Any, Dict, Iterable, List, Union
 from cffi import FFI
 import six
-from refcount.interop import OwningCffiNativeHandle
+from refcount.interop import CffiNativeHandle, OwningCffiNativeHandle
 from datetime import datetime
 import xarray as xr
 import pandas as pd
@@ -19,6 +19,7 @@ ConvertibleToTimestamp = Union[str, datetime, np.datetime64, pd.Timestamp]
 """
 
 TimeSeriesLike = Union[pd.Series, pd.DataFrame, xr.DataArray]
+NativePointerLike = Union[OwningCffiNativeHandle, CffiNativeHandle, CffiData]
 
 _c2dtype = dict()
 _c2dtype[ 'float *' ] = np.dtype( 'f4' )
@@ -257,19 +258,19 @@ def _is_convertible_to_timestamp(t: Any):
     return isinstance(t, str) or isinstance(t, datetime) or isinstance(t, np.datetime64) or isinstance(t, pd.Timestamp)
 
 
-def as_timestamp(t: ConvertibleToTimestamp) -> pd.Timestamp:
+def as_timestamp(t: ConvertibleToTimestamp, tz=None) -> pd.Timestamp:
     # work around a breaking change in pandas 1.x: "Expected unicode, got numpy.str_'
     if isinstance(t, np.str):
         t = str(t)
     if _is_convertible_to_timestamp(t):
-        return pd.Timestamp(t)
+        return pd.Timestamp(t, tz=tz)
     else:
         raise TypeError(
             "Cannot convert to a timestamp the object of type" + str(type(t)))
 
 
-def as_pydatetime(t: ConvertibleToTimestamp) -> datetime:
-    return as_timestamp(t).to_pydatetime()
+def as_pydatetime(t: ConvertibleToTimestamp, tz=None) -> datetime:
+    return as_timestamp(t, tz=tz).to_pydatetime()
 
 ## TODO: Generic, non interop time series functions should go "elsewhere"
 
@@ -415,6 +416,13 @@ def as_native_time_series(ffi:FFI, data:TimeSeriesLike) -> OwningCffiNativeHandl
     result = OwningCffiNativeHandle(ptr)
     result.keepalive = [tsg, num_data]
     return result
+
+def is_cffi_c_data(ptr:NativePointerLike) -> bool:
+    return isinstance(ptr, FFI.CData)
+
+def is_native_time_series(ptr:NativePointerLike) -> bool:
+    if is_cffi_c_data(ptr):
+        ptr.type_id
 
 
 def values_to_nparray(ffi:FFI, ptr:CffiData) -> np.ndarray:
@@ -570,6 +578,10 @@ def _copy_datetime_to_dtts(dt: datetime, ptr):
 def datetime_to_dtts(ffi:FFI, dt: datetime) -> OwningCffiNativeHandle:
     ptr = ffi.new("date_time_to_second*")
     _copy_datetime_to_dtts(dt, ptr)
+    return OwningCffiNativeHandle(ptr)
+
+def new_date_time_to_second(ffi:FFI) -> OwningCffiNativeHandle:
+    ptr = ffi.new("date_time_to_second*")
     return OwningCffiNativeHandle(ptr)
 
 def as_bytes(obj:Any) -> Union[bytes, Any]:
@@ -854,6 +866,9 @@ class CffiMarshal:
 
     def new_native_tsgeom(self) -> TimeSeriesGeometryNative:
         return TimeSeriesGeometryNative(self._ffi)
+
+    def new_date_time_to_second(self) -> OwningCffiNativeHandle:
+        return new_date_time_to_second(self._ffi)
 
     def new_native_struct(self, type) -> OwningCffiNativeHandle:
         return OwningCffiNativeHandle(self._ffi.new(type), type)
