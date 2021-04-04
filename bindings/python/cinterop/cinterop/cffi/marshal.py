@@ -26,24 +26,24 @@ _c2dtype[ 'float *' ] = np.dtype( 'f4' )
 _c2dtype[ 'double *' ] = np.dtype( 'f8' )
 # _c2dtype[ 'int *' ] = np.dtype( 'i4' ) TBD
 
-def new_int_array(ffi, size) -> CffiData:
+def new_int_array(ffi:FFI, size) -> CffiData:
     return ffi.new('int[%d]' % (size,))
 
-def new_int_scalar_ptr(ffi, value:int=0) -> CffiData:
+def new_int_scalar_ptr(ffi:FFI, value:int=0) -> CffiData:
     ptr = ffi.new('int*')
     ptr[0] = value
     return ptr
 
-def new_double_array(ffi, size) -> CffiData:
+def new_double_array(ffi:FFI, size) -> CffiData:
     return ffi.new('double[%d]' % (size,))
 
-def new_doubleptr_array(ffi, size) -> CffiData:
+def new_doubleptr_array(ffi:FFI, size) -> CffiData:
     return ffi.new('double*[%d]' % (size,))
 
-def new_charptr_array(ffi, size) -> CffiData:
+def new_charptr_array(ffi:FFI, size) -> CffiData:
     return ffi.new('char*[%d]' % (size,))
 
-def as_charptr(ffi, x:str) -> CffiData:
+def as_charptr(ffi:FFI, x:str) -> CffiData:
     return ffi.new("char[]", as_bytes(x))
 
 def as_numeric_np_array(ffi:FFI, ptr:CffiData, size:int, shallow:bool=False) -> np.ndarray:
@@ -277,10 +277,20 @@ def as_pydatetime(t: ConvertibleToTimestamp, tz=None) -> datetime:
 TIME_DIMNAME="time"
 ENSEMBLE_DIMNAME="ensemble"
 
+
+def _pd_index(x):
+    if not isinstance(x.index, pd.DatetimeIndex):
+        raise Exception("pandas structure; but the index is not an DatetimeIndex")
+    return x.index
+
 def xr_ts_start(x:xr.DataArray):
+    if isinstance(x, pd.Series) or isinstance(x, pd.DataFrame):
+        return _pd_index(x)[0]
     return x.coords[TIME_DIMNAME].values[0]
 
 def xr_ts_end(x:xr.DataArray):
+    if isinstance(x, pd.Series) or isinstance(x, pd.DataFrame):
+        return _pd_index(x)[-1]
     return x.coords[TIME_DIMNAME].values[-1]
 
 def _time_interval_indx(dt:np.ndarray, from_date: pd.Timestamp = None, to_date: pd.Timestamp = None) -> np.ndarray:
@@ -689,6 +699,10 @@ class CffiMarshal:
             np.ndarray: converted data
         """    
         return as_numeric_np_array(self._ffi, ptr, size, shallow)
+
+    @property
+    def nullptr(self):
+        return FFI.NULL
 
     def as_np_array_double(self, ptr:CffiData, size:int, shallow:bool=False) -> np.ndarray:
         """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats.
