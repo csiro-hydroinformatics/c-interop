@@ -43,6 +43,9 @@ def new_doubleptr_array(ffi:FFI, size) -> CffiData:
 def new_charptr_array(ffi:FFI, size) -> CffiData:
     return ffi.new('char*[%d]' % (size,))
 
+def new_ctype_array(ffi:FFI, ctype:str, size:int) -> CffiData:
+    return ffi.new('%s[%d]' % (ctype,size))
+
 def as_charptr(ffi:FFI, x:str) -> CffiData:
     return ffi.new("char[]", as_bytes(x))
 
@@ -456,14 +459,30 @@ def create_values_struct(ffi:FFI, data:np.ndarray) -> OwningCffiNativeHandle:
     ptr.values = as_c_double_array(ffi, data).ptr
     return OwningCffiNativeHandle(ptr)
 
-def as_c_double_array(ffi:FFI, data:np.ndarray) -> OwningCffiNativeHandle:
+def as_c_double_array(ffi:FFI, data:np.ndarray, shallow:bool=False) -> OwningCffiNativeHandle:
     if isinstance(data, list):
         data = np.asfarray(data)
+        shallow = False
     elif isinstance(data, xr.DataArray):
         data = data.values
+        shallow = False # really needed??
     elif not isinstance(data, np.ndarray):
         raise TypeError("Conversion to a c array of double requires list or np array as input")
-    return OwningCffiNativeHandle(ffi.cast("double *", np.ascontiguousarray(data.ctypes.data)))
+    if len(data.shape) > 1:
+        data = data.squeeze()
+        shallow = False
+        if len(data.shape) > 1:
+            raise TypeError("Conversion to a double* array: input data must be of dimension one, and the python array cannot be squeezed to dimension one")
+    if shallow and data.flags['C_CONTIGUOUS']:
+        native_d = ffi.cast("double *", data.ctypes.data)
+    else:
+        native_d = new_double_array(ffi, data.shape[0])
+        if not data.flags['C_CONTIGUOUS']:
+            data_c = np.ascontiguousarray(data)
+        else:
+            data_c = data
+        ffi.buffer(native_d)[:] = data_c[:]
+    return OwningCffiNativeHandle(native_d)
 
 def as_c_char_array(ffi, data) -> OwningCffiNativeHandle:
     if isinstance(data, list):
@@ -887,11 +906,14 @@ class CffiMarshal:
     def new_native_struct(self, type) -> OwningCffiNativeHandle:
         return OwningCffiNativeHandle(self._ffi.new(type), type)
 
-    def as_c_double_array(self, data:np.ndarray) -> OwningCffiNativeHandle:
-        return as_c_double_array(self._ffi, data)
+    def new_ctype_array(self, ctype:str, size:int) -> OwningCffiNativeHandle:
+        return new_ctype_array(self._ffi, ctype, size)
+
+    def as_c_double_array(self, data:np.ndarray, shallow:bool=False) -> OwningCffiNativeHandle:
+        return as_c_double_array(self._ffi, data, shallow)
     
-    def as_c_char_array(self, data:np.ndarray) -> OwningCffiNativeHandle:
-        return as_c_char_array(self._ffi, data)
+    def as_c_char_array(self, data:np.ndarray, shallow:bool=False) -> OwningCffiNativeHandle:
+        return as_c_char_array(self._ffi, data, shallow)
 
     def as_native_time_series(self, data:TimeSeriesLike) -> OwningCffiNativeHandle:
         return as_native_time_series(self._ffi, data)
