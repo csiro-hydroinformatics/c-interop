@@ -43,11 +43,19 @@ def new_doubleptr_array(ffi:FFI, size) -> CffiData:
 def new_charptr_array(ffi:FFI, size) -> CffiData:
     return ffi.new('char*[%d]' % (size,))
 
-def new_ctype_array(ffi:FFI, ctype:str, size:int) -> CffiData:
-    return ffi.new('%s[%d]' % (ctype,size))
+def new_ctype_array(ffi:FFI, ctype:str, size:int, wrap=False) -> Union[OwningCffiNativeHandle,CffiData]:
+    x = ffi.new('%s[%d]' % (ctype,size))
+    if wrap:
+        return OwningCffiNativeHandle(x)
+    else:
+        return x
 
-def as_charptr(ffi:FFI, x:str) -> CffiData:
-    return ffi.new("char[]", as_bytes(x))
+def as_charptr(ffi:FFI, x:str, wrap=False) -> CffiData:
+    x = ffi.new("char[]", as_bytes(x))
+    if wrap:
+        return OwningCffiNativeHandle(x)
+    else:
+        return x
 
 def as_numeric_np_array(ffi:FFI, ptr:CffiData, size:int, shallow:bool=False) -> np.ndarray:
     """Convert if possible a cffi pointer to a C data array, into a numpy array.
@@ -865,8 +873,8 @@ class CffiMarshal:
     def dict_to_string_map(self, data:Dict[str,str]) -> OwningCffiNativeHandle:
         return dict_to_string_map(self._ffi, data)
 
-    def as_charptr(self, x:str) -> CffiData:
-        return as_charptr(self._ffi, x)
+    def as_charptr(self, x:str, wrap=False) -> CffiData:
+        return as_charptr(self._ffi, x, wrap)
 
     def values_to_nparray(self, ptr:CffiData) -> Dict[str,float]:
         """Convert if possible a cffi pointer to a values_vector struct, into a python array
@@ -906,8 +914,8 @@ class CffiMarshal:
     def new_native_struct(self, type) -> OwningCffiNativeHandle:
         return OwningCffiNativeHandle(self._ffi.new(type), type)
 
-    def new_ctype_array(self, ctype:str, size:int) -> OwningCffiNativeHandle:
-        return new_ctype_array(self._ffi, ctype, size)
+    def new_ctype_array(self, ctype:str, size:int, wrap=False) -> Union[OwningCffiNativeHandle,CffiData]:
+        return new_ctype_array(self._ffi, ctype, size, wrap)
 
     def as_c_double_array(self, data:np.ndarray, shallow:bool=False) -> OwningCffiNativeHandle:
         return as_c_double_array(self._ffi, data, shallow)

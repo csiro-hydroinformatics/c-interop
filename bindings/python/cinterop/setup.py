@@ -70,7 +70,9 @@ CLASSIFIERS = ['Development Status :: 4 - Beta',
                 'License :: OSI Approved :: MIT License',
                 'Operating System :: OS Independent',
                 'Programming Language :: Python',
-                # 'Programming Language :: Python :: 2.7',
+                # Suggestions in the CFFI mailing list that refcount may be cpython only and problematic on pypy
+                'Programming Language :: Python :: Implementation :: CPython',
+                # 'Programming Language :: Python :: 2.7', # Not sure anymore. Needs unit testing if so.
                 'Programming Language :: Python :: 3'
                 ]
 # Arguments marked as "Required" below must be included for upload to PyPI.
