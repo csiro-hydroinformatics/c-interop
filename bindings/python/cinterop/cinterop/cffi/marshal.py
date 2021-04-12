@@ -274,6 +274,15 @@ def as_timestamp(t: ConvertibleToTimestamp, tz=None) -> pd.Timestamp:
     if isinstance(t, np.str):
         t = str(t)
     if _is_convertible_to_timestamp(t):
+        if isinstance(t, pd.Timestamp):
+            if tz is None:
+                return t
+            elif t.tz is None:
+                return pd.Timestamp(t, tz=tz)
+            elif str(t.tz) == str(tz):
+                return t
+            else:
+                raise ValueError("Not supported - Cannot pass a datetime or Timestamp with tzinfo with the tz parameter. Use tz_convert instead")
         return pd.Timestamp(t, tz=tz)
     else:
         raise TypeError(
@@ -481,6 +490,9 @@ def as_c_double_array(ffi:FFI, data:np.ndarray, shallow:bool=False) -> OwningCff
         shallow = False
         if len(data.shape) > 1:
             raise TypeError("Conversion to a double* array: input data must be of dimension one, and the python array cannot be squeezed to dimension one")
+    if not data.dtype == np.float:
+        shallow = False
+        data = data.astype(np.float)
     if shallow and data.flags['C_CONTIGUOUS']:
         native_d = ffi.cast("double *", data.ctypes.data)
     else:
