@@ -501,7 +501,7 @@ def as_c_double_array(ffi:FFI, data:np.ndarray, shallow:bool=False) -> OwningCff
             data_c = np.ascontiguousarray(data)
         else:
             data_c = data
-        ffi.buffer(native_d)[:] = data_c[:]
+        ffi.buffer(native_d)[:] = data_c
     return OwningCffiNativeHandle(native_d)
 
 def as_c_char_array(ffi, data) -> OwningCffiNativeHandle:
