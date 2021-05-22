@@ -528,12 +528,15 @@ def two_d_as_np_array_double(ffi:FFI, ptr:CffiData, nrow:int, ncol:int, shallow:
         np.ndarray: converted data
     """
     # TODO check type
-    rows = ffi.cast('double*[%d]' % (nrow,), ptr)
-    res = np.vstack([as_numeric_np_array(ffi, rows[i], size=ncol, shallow=False) for i in range(nrow)])
-    if shallow:
-        return res
+    if nrow == 0 or ncol == 0: # do not cast a native ptr that is likely nullptr or worse. Following works thankfully as an edge case.
+        return np.ndarray(shape=(nrow, ncol))
     else:
-        return res.copy()
+        rows = ffi.cast('double*[%d]' % (nrow,), ptr)
+        res = np.vstack([as_numeric_np_array(ffi, rows[i], size=ncol, shallow=False) for i in range(nrow)])
+        if shallow:
+            return res
+        else:
+            return res.copy()
 
 def two_d_np_array_double_to_native(ffi:FFI, data:np.ndarray, shallow:bool=False) -> OwningCffiNativeHandle:
     """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats.
