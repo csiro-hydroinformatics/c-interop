@@ -11,7 +11,7 @@ version: 2
 
 # Build documentation with MkDocs
 mkdocs:
-  configuration: ./bindings/python/cinterop/mkdocs.yml
+  configuration: bindings/python/cinterop/mkdocs.yml
 
 # Optionally build your docs in additional formats such as PDF
 # formats:
@@ -21,10 +21,10 @@ mkdocs:
 python:
   version: 3.8
   install:
-    - requirements: ./bindings/python/cinterop/docs/requirements.txt
+    - requirements: bindings/python/cinterop/docs/requirements.txt
 #      path: ./bindings/python/cinterop
     - method: setuptools
-      path: ./bindings/python/cinterop
+      path: bindings/python/cinterop
 
 ## Tried to use conda; worked for a bit but then failed to work with typehints added
 # on the readthedoc build. but works locally. Revert to pip requirements instead
