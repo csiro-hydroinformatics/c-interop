@@ -15,8 +15,9 @@ import os
 here = os.path.abspath(os.path.dirname(__file__))
 
 verstr = 'unknown'
-VERSIONFILE = "cinterop/_version.py"
-with open(VERSIONFILE, "r")as f:
+VERSIONFILE = os.path.join(here, "cinterop/_version.py")
+
+with open(VERSIONFILE, "r") as f:
     verstrline = f.read().strip()
     pattern = re.compile(r"__version__ = ['\"](.*)['\"]")
     mo = pattern.search(verstrline)
