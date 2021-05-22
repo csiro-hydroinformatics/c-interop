@@ -1,0 +1,12 @@
+channels:
+  - conda-forge
+dependencies:
+  - cffi
+  - refcount 
+  - xarray
+  - numpy
+  - pandas
+  - mkdocs
+  - mkdocs-material
+  - mkdocs-material-extensions
+  - mkdocstrings
