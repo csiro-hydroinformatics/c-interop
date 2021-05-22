@@ -3,6 +3,8 @@
 [![license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/csiro-hydroinformatics/rcpp-interop-commons/blob/master/LICENSE.txt)
 ![status](https://img.shields.io/badge/status-beta-blue.svg)
 
+[![Python package doc](https://readthedocs.org/projects/cinterop/badge/?version=latest)](https://cinterop.readthedocs.io/en/latest/?badge=latest)
+
 The idea is to have more consistency of vocabulary in interoperability glue code, using template-only C++, also avoiding code duplications across several projects I have (and others have, hopefully).
 
 The code design also captures material that evolved over the years to prevent some "gotchas" one can get into when diving deep in native interop accross compilation modules.

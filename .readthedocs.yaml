@@ -21,7 +21,7 @@ mkdocs:
 python:
   version: 3.8
   install:
-    - requirements: docs/requirements.txt
+    - requirements: ./bindings/python/cinterop/docs/requirements.txt
       path: ./bindings/python/cinterop
 
 ## Tried to use conda; worked for a bit but then failed to work with typehints added
