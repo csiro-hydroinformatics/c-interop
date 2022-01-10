@@ -398,11 +398,18 @@ def create_even_time_index(start:ConvertibleToTimestamp, time_step_seconds:int, 
     delta_t = np.timedelta64(time_step_seconds, 's')
     return [start + delta_t * i for i in range(n)]
 
+def create_monthly_time_index(start:ConvertibleToTimestamp, n:int) -> List:
+    start = as_timestamp(start)
+    return [start + pd.tseries.offsets.DateOffset(months=i) for i in range(n)]
+
 def ts_geom_to_even_time_index(ts_geom:TimeSeriesGeometryNative) -> List:
     start = as_timestamp(ts_geom.start)
-    if ts_geom.time_step_code > 0:
-        raise NotImplementedError("Can only handle conversion of regular time steps, for now")
-    return create_even_time_index(start, ts_geom.time_step_seconds, ts_geom.length)
+    if ts_geom.time_step_code == 0:
+        return create_even_time_index(start, ts_geom.time_step_seconds, ts_geom.length)
+    if ts_geom.time_step_code == 1:
+        return create_monthly_time_index(start, ts_geom.length)
+    else:
+        raise NotImplementedError("Unrecognised time step code '{}'".format(ts_geom.time_step_code))
 
 def as_xarray_time_series(ffi:FFI, ptr:CffiData) -> xr.DataArray:
     ts_geom = TimeSeriesGeometryNative(ptr.time_series_geometry)
