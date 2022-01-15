@@ -21,6 +21,8 @@ ConvertibleToTimestamp = Union[str, datetime, np.datetime64, pd.Timestamp]
 TimeSeriesLike = Union[pd.Series, pd.DataFrame, xr.DataArray]
 NativePointerLike = Union[OwningCffiNativeHandle, CffiNativeHandle, CffiData]
 
+UnivSeries = Union[xr.DataArray, pd.Series]
+
 _c2dtype = dict()
 _c2dtype[ 'float *' ] = np.dtype( 'f4' )
 _c2dtype[ 'double *' ] = np.dtype( 'f8' )
@@ -358,7 +360,7 @@ def slice_pd_time_series(data: pd.Series, from_date: pd.Timestamp = None, to_dat
     tt = _time_interval_indx(dt, from_date, to_date)
     return data[tt]
 
-def ts_window(ts:Union[xr.DataArray, pd.Series], from_date: pd.Timestamp = None, to_date: pd.Timestamp = None):
+def ts_window(ts:UnivSeries, from_date: pd.Timestamp = None, to_date: pd.Timestamp = None):
     if isinstance(ts, xr.DataArray):
         return slice_xr_time_series(ts, from_date, to_date)
     elif isinstance(ts, pd.Series):
@@ -366,7 +368,7 @@ def ts_window(ts:Union[xr.DataArray, pd.Series], from_date: pd.Timestamp = None,
     else:
         raise TypeError("Not supported: " + str(type(ts)))
 
-def start_ts(ts:Union[xr.DataArray, pd.Series]):
+def start_ts(ts:UnivSeries):
     if isinstance(ts, xr.DataArray):
         return xr_ts_start(ts)
     elif isinstance(ts, pd.Series):
@@ -374,7 +376,7 @@ def start_ts(ts:Union[xr.DataArray, pd.Series]):
     else:
         raise TypeError("Not supported: " + str(type(ts)))
 
-def end_ts(ts:Union[xr.DataArray, pd.Series]):
+def end_ts(ts:UnivSeries):
     if isinstance(ts, xr.DataArray):
         return xr_ts_end(ts)
     elif isinstance(ts, pd.Series):
