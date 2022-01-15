@@ -511,12 +511,22 @@ def as_c_double_array(ffi:FFI, data:np.ndarray, shallow:bool=False) -> OwningCff
         ffi.buffer(native_d)[:] = data_c
     return OwningCffiNativeHandle(native_d)
 
-def as_c_char_array(ffi, data) -> OwningCffiNativeHandle:
+def as_c_char_array(ffi, data, shallow:bool=False) -> OwningCffiNativeHandle:
     if isinstance(data, list):
         data = np.asfarray(data)
+        shallow = False
     elif not isinstance(data, np.ndarray):
         raise TypeError("Conversion to a c array of double requires list or np array as input")
-    return OwningCffiNativeHandle(ffi.cast("char *", np.ascontiguousarray(data.ctypes.data)))
+    if shallow and data.flags['C_CONTIGUOUS']:
+        native_d = ffi.cast("char *", data.ctypes.data)
+    else:
+        native_d = new_charptr_array(ffi, data.shape[0])
+        if not data.flags['C_CONTIGUOUS']:
+            data_c = np.ascontiguousarray(data.ctypes.data)
+        else:
+            data_c = data
+        ffi.buffer(native_d)[:] = data_c
+    return OwningCffiNativeHandle(native_d)
 
 def two_d_as_np_array_double(ffi:FFI, ptr:CffiData, nrow:int, ncol:int, shallow:bool=False) -> np.ndarray:
     """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats.
@@ -947,34 +957,3 @@ class CffiMarshal:
 
     def as_native_time_series(self, data:TimeSeriesLike) -> OwningCffiNativeHandle:
         return as_native_time_series(self._ffi, data)
-
-
-
-def as_bytes(obj:Any) -> Union[bytes, Any]:
-    """Convert obj to bytes if it is a string type
-
-    Args:
-        obj (Any): object to convert
-
-    Returns:
-        Union[bytes, Any]: object converted to bytes if it was a type of string
-    """    
-    if isinstance(obj, bytes):
-        return obj
-    elif isinstance(obj, six.string_types):
-        return obj.encode('utf-8')
-    else:
-        return obj
-
-def as_string(obj:Any) -> Union[str, Any]:
-    """Convert obj to string/unicode if it is a bytes object.
-
-    Args:
-        obj (Any): object to convert
-
-    Returns:
-        Union[str, Any]: result converted (or not) to unicode string
-    """
-    if isinstance(obj, bytes):
-        return obj.decode('utf-8')
-    return obj
