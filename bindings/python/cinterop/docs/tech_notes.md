@@ -34,7 +34,7 @@ conda install  wheel twine six pytest
 conda activate ${my_env_name}
 cd ${HOME}/src/github_jm/rcpp-interop-commons/bindings/python/cinterop
 rm dist/*
-python3 setup.py sdist bdist_wheel
+python setup.py sdist bdist_wheel
 rm dist/*.tar
 ```
 
@@ -83,4 +83,5 @@ Can view with the `retext` program (did not find VScode RST extensions working, 
 ```sh
 python setup.py check --restructuredtext
 ```
+
 
