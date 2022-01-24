@@ -6,8 +6,6 @@
 ![CFFI interop convenience wrapper](./docs/img/cinterop-principles.png "CFFI interop convenience wrapper")
 
 
-[Marshalling data between C, C++ and other programming languages](https://github.com/csiro-hydroinformatics/rcpp-interop-commons)
-
 This package is primarily for managing and marshalling resources in native libraries, written for instance in C++, from Python. 
 
 ## License
@@ -16,13 +14,13 @@ MIT (see [License.txt](https://github.com/csiro-hydroinformatics/rcpp-interop-co
 
 ## Documentation
 
-Placeholder 
+Placeholder
 
 <!-- Hosted at [pycinterop.readthedocs.io](https://pycinterop.readthedocs.io/en/latest/?badge=latest) -->
 
 ## Source code
 
-The code repository is on [GitHub](https://github.com/csiro-hydroinformatics/rcpp-interop-commons).
+[Marshalling data between C, C++ and other programming languages onGitHub](https://github.com/csiro-hydroinformatics/rcpp-interop-commons)
 
 ## Installation
 
