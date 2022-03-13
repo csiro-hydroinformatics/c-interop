@@ -15,11 +15,16 @@ CffiData = Any
 """dummy type hint for FFI.CData"""
 
 ConvertibleToTimestamp = Union[str, datetime, np.datetime64, pd.Timestamp]
-"""Definition of a 'type' for type hints. 
+"""types that can be converted with relative unambiguity to a pandas Timestamp 
 """
 
 TimeSeriesLike = Union[pd.Series, pd.DataFrame, xr.DataArray]
+"""types that can represent time series 
+"""
+
 NativePointerLike = Union[OwningCffiNativeHandle, CffiNativeHandle, CffiData]
+"""types that can represent time series 
+"""
 
 _c2dtype = dict()
 _c2dtype[ 'float *' ] = np.dtype( 'f4' )
