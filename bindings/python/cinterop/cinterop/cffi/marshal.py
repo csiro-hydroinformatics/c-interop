@@ -489,7 +489,7 @@ def as_c_double_array(ffi:FFI, data:np.ndarray, shallow:bool=False) -> OwningCff
         shallow = False
     elif isinstance(data, xr.DataArray):
         data = data.values
-        shallow = False # really needed??
+        # shallow = False # really needed??
     elif not isinstance(data, np.ndarray):
         raise TypeError("Conversion to a c array of double requires list or np array as input")
     if len(data.shape) > 1:
@@ -497,9 +497,11 @@ def as_c_double_array(ffi:FFI, data:np.ndarray, shallow:bool=False) -> OwningCff
         shallow = False
         if len(data.shape) > 1:
             raise TypeError("Conversion to a double* array: input data must be of dimension one, and the python array cannot be squeezed to dimension one")
-    if not data.dtype == np.float:
+    if not (data.dtype == np.float or data.dtype == np.float64  or data.dtype == float or data.dtype == np.double or data.dtype == np.float_):
+        # https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+        # TODO: is this wise to override the shallow parameter
         shallow = False
-        data = data.astype(np.float)
+        data = data.astype(np.float64)
     if shallow and data.flags['C_CONTIGUOUS']:
         native_d = ffi.cast("double *", data.ctypes.data)
     else:
