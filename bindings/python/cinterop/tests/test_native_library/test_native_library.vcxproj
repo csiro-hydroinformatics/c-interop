@@ -22,7 +22,7 @@
     <ProjectGuid>{32E08C93-DB46-4A93-8FE7-5791E088B2A1}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>test_native_library</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
@@ -59,7 +59,7 @@
     <WholeProgramOptimization Condition="'$(Configuration)'=='Debug'">false</WholeProgramOptimization>
     <WholeProgramOptimization Condition="'$(Configuration)'=='Release'">true</WholeProgramOptimization>
     <!-- Potentially included here? -->
-    <!-- <PlatformToolset>v120</PlatformToolset> -->
+    <!-- <PlatformToolset>v141</PlatformToolset> -->
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
