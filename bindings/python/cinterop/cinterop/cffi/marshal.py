@@ -276,7 +276,7 @@ def _is_convertible_to_timestamp(t: Any):
 
 def as_timestamp(t: ConvertibleToTimestamp, tz=None) -> pd.Timestamp:
     # work around a breaking change in pandas 1.x: "Expected unicode, got numpy.str_'
-    if isinstance(t, np.str):
+    if isinstance(t, str):
         t = str(t)
     if _is_convertible_to_timestamp(t):
         if isinstance(t, pd.Timestamp):
@@ -319,7 +319,7 @@ def xr_ts_end(x:xr.DataArray):
     return x.coords[TIME_DIMNAME].values[-1]
 
 def _time_interval_indx(dt:np.ndarray, from_date: pd.Timestamp = None, to_date: pd.Timestamp = None) -> np.ndarray:
-    tt = np.empty_like(dt, np.bool)
+    tt = np.empty_like(dt, bool)
     tt[:] = True
     if from_date is not None:
         tt = np.logical_and(tt, (dt >= np.datetime64(from_date)))
@@ -502,7 +502,7 @@ def as_c_double_array(ffi:FFI, data:np.ndarray, shallow:bool=False) -> OwningCff
         shallow = False
         if len(data.shape) > 1:
             raise TypeError("Conversion to a double* array: input data must be of dimension one, and the python array cannot be squeezed to dimension one")
-    if not (data.dtype == np.float or data.dtype == np.float64  or data.dtype == float or data.dtype == np.double or data.dtype == np.float_):
+    if not (data.dtype == np.float64 or data.dtype == float or data.dtype == np.double or data.dtype == np.float_):
         # https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
         # TODO: is this wise to override the shallow parameter
         shallow = False

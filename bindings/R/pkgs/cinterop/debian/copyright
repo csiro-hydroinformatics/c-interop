@@ -3,11 +3,11 @@ Upstream-Name: rcpp-interop-commons
 Upstream-Contact: Jean-Michel Perraud <per202@csiro.au>
 Source: <https://github.com/csiro-hydroinformatics/rcpp-interop-commons>
 
-Copyright:
+Copyright: 2013-2022 Commonwealth Scientific and Industrial Research Organisation (CSIRO)
 Files: *
-    Copyright (C) 2020 CSIRO
 
-License:
+
+License: CSIRO-OSS
     CSIRO Open Source Software Licence Agreement (variation of the BSD / MIT License)
     .
     Copyright (c) 2018, Commonwealth Scientific and Industrial Research Organisation (CSIRO) ABN 41 687 119 230.
