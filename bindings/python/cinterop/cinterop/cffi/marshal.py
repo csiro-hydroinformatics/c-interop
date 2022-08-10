@@ -10,17 +10,11 @@ from datetime import datetime
 import xarray as xr
 import pandas as pd
 
+from ..timeseries import ConvertibleToTimestamp, TimeSeriesLike, as_pydatetime, as_timestamp, create_even_time_index, create_monthly_time_index
+
 # This is a Hack. I cannot use FFI.CData in type hints.
 CffiData = Any
 """dummy type hint for FFI.CData"""
-
-ConvertibleToTimestamp = Union[str, datetime, np.datetime64, pd.Timestamp]
-"""types that can be converted with relative unambiguity to a pandas Timestamp 
-"""
-
-TimeSeriesLike = Union[pd.Series, pd.DataFrame, xr.DataArray]
-"""types that can represent time series 
-"""
 
 NativePointerLike = Union[OwningCffiNativeHandle, CffiNativeHandle, CffiData]
 """types that can represent time series 
@@ -269,34 +263,6 @@ def get_native_tsgeom(ffi:FFI, pd_series:pd.Series) -> OwningCffiNativeHandle:
     # stopifnot(xts::is.xts(pd_series))
     return as_native_tsgeom(ffi, get_tsgeom(pd_series))
 
-
-def _is_convertible_to_timestamp(t: Any):
-    return isinstance(t, str) or isinstance(t, datetime) or isinstance(t, np.datetime64) or isinstance(t, pd.Timestamp)
-
-
-def as_timestamp(t: ConvertibleToTimestamp, tz=None) -> pd.Timestamp:
-    # work around a breaking change in pandas 1.x: "Expected unicode, got numpy.str_'
-    if isinstance(t, str):
-        t = str(t)
-    if _is_convertible_to_timestamp(t):
-        if isinstance(t, pd.Timestamp):
-            if tz is None:
-                return t
-            elif t.tz is None:
-                return pd.Timestamp(t, tz=tz)
-            elif str(t.tz) == str(tz):
-                return t
-            else:
-                raise ValueError("Not supported - Cannot pass a datetime or Timestamp with tzinfo with the tz parameter. Use tz_convert instead")
-        return pd.Timestamp(t, tz=tz)
-    else:
-        raise TypeError(
-            "Cannot convert to a timestamp the object of type" + str(type(t)))
-
-
-def as_pydatetime(t: ConvertibleToTimestamp, tz=None) -> datetime:
-    return as_timestamp(t, tz=tz).to_pydatetime()
-
 ## TODO: Generic, non interop time series functions should go "elsewhere"
 
 TIME_DIMNAME="time"
@@ -397,15 +363,6 @@ def create_single_series(npx:np.ndarray, time_index:List) -> xr.DataArray:
 
 def pd_series_to_xr_series(series:pd.Series) -> xr.DataArray:
     return create_single_series(series.values, series.index)
-
-def create_even_time_index(start:ConvertibleToTimestamp, time_step_seconds:int, n:int) -> List:
-    start = as_timestamp(start)
-    delta_t = np.timedelta64(time_step_seconds, 's')
-    return [start + delta_t * i for i in range(n)]
-
-def create_monthly_time_index(start:ConvertibleToTimestamp, n:int) -> List:
-    start = as_timestamp(start)
-    return [start + pd.tseries.offsets.DateOffset(months=i) for i in range(n)]
 
 def ts_geom_to_even_time_index(ts_geom:TimeSeriesGeometryNative) -> List:
     start = as_timestamp(ts_geom.start)
