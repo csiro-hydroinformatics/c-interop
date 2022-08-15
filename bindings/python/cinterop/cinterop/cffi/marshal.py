@@ -221,11 +221,12 @@ def dict_to_named_values(ffi:FFI, data:Dict[str,float]) -> OwningCffiNativeHandl
     """
     ptr = ffi.new("named_values_vector*")
     ptr.size = len(data)
-    ptr.values = as_c_double_array(ffi, list(data.values())).ptr
+    values = as_c_double_array(ffi, list(data.values()))
     names = as_arrayof_bytes(ffi, list(data.keys()))
+    ptr.values = values.ptr
     ptr.names = names.ptr
     result = OwningCffiNativeHandle(ptr)
-    result.keepalive = names
+    result.keepalive = [names, values]
     return result
 
 def string_map_to_dict(ffi:FFI, ptr:CffiData) -> Dict[str,str]:
