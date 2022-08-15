@@ -20,20 +20,27 @@ ConvertibleToTimestamp = Union[str, datetime, np.datetime64, pd.Timestamp]
 
 
 def create_even_time_index(start:ConvertibleToTimestamp, time_step_seconds:int, n:int) -> List:
-    start = as_timestamp(start)
-    delta_t = np.timedelta64(time_step_seconds, 's')
-    return [start + delta_t * i for i in range(n)]
+    if time_step_seconds == 3600:
+        return create_hourly_time_index(start, n)
+    elif time_step_seconds == 86400:
+        return create_daily_time_index(start, n)
+    else:
+        start = as_datetime64(start)
+        delta_t = np.timedelta64(time_step_seconds, 's')
+        # Note: below appears to be a few times faster than pd.date_range with a freq=Dateoffset for some reasons.
+        return pd.DatetimeIndex([start + delta_t * i for i in range(n)])
 
-def create_daily_time_index(start:ConvertibleToTimestamp, n:int) -> List:
-    return create_even_time_index(start, 86400, n)
+def create_daily_time_index(start:ConvertibleToTimestamp, n:int) -> pd.DatetimeIndex:
+    start = as_datetime64(start)
+    return pd.date_range(start, periods=n, freq="D") # much faster than list comprehension, see https://jmp75.github.io/work-blog/c++/python/performance/runtime/2022/08/09/python-profiling-interop.html
 
-def create_hourly_time_index(start:ConvertibleToTimestamp, n:int) -> List:
-    return create_even_time_index(start, 3600, n)
+def create_hourly_time_index(start:ConvertibleToTimestamp, n:int) -> pd.DatetimeIndex:
+    start = as_datetime64(start)
+    return pd.date_range(start, periods=n, freq="H") # much faster than list comprehension
 
 def create_monthly_time_index(start:ConvertibleToTimestamp, n:int) -> List:
-    start = as_timestamp(start)
-    return [start + pd.tseries.offsets.DateOffset(months=i) for i in range(n)]
-
+    start = as_datetime64(start)
+    return pd.date_range(start, periods=n, freq=pd.tseries.offsets.DateOffset(months=1)) 
 
 def _is_convertible_to_timestamp(t: Any):
     return isinstance(t, str) or isinstance(t, datetime) or isinstance(t, np.datetime64) or isinstance(t, pd.Timestamp)
@@ -57,6 +64,8 @@ def as_timestamp(t: ConvertibleToTimestamp, tz=None) -> pd.Timestamp:
         raise TypeError(
             "Cannot convert to a timestamp the object of type" + str(type(t)))
 
+def as_datetime64(t: ConvertibleToTimestamp, tz=None) -> np.datetime64:
+    return as_timestamp(t, tz).to_datetime64()
 
 def as_pydatetime(t: ConvertibleToTimestamp, tz=None) -> datetime:
     return as_timestamp(t, tz=tz).to_pydatetime()
