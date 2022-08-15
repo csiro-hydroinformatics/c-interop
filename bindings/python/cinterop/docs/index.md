@@ -1,35 +1,31 @@
 # cinterop
 
-<!-- [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/csiro-hydroinformatics/rcpp-interop-commons/blob/master/bindings/python/cinterop/LICENSE.txt) ![status](https://img.shields.io/badge/status-beta-blue.svg) [![Documentation Status](https://readthedocs.org/projects/pycinterop/badge/?version=latest)](https://pycinterop.readthedocs.io/en/latest/?badge=latest) master: [![Build status - master](https://ci.appveyor.com/api/projects/status/vmwq7xarxxj8s564/branch/master?svg=true)](https://ci.appveyor.com/project/jmp75/pycinterop/branch/master) testing: [![Build status - devel](https://ci.appveyor.com/api/projects/status/vmwq7xarxxj8s564/branch/testing?svg=true)](https://ci.appveyor.com/project/jmp75/pycinterop/branch/testing)
+<!-- [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/csiro-hydroinformatics/c-interop/blob/master/bindings/python/cinterop/LICENSE.txt) ![status](https://img.shields.io/badge/status-beta-blue.svg) [![Documentation Status](https://readthedocs.org/projects/pycinterop/badge/?version=latest)](https://pycinterop.readthedocs.io/en/latest/?badge=latest) master: [![Build status - master](https://ci.appveyor.com/api/projects/status/vmwq7xarxxj8s564/branch/master?svg=true)](https://ci.appveyor.com/project/jmp75/pycinterop/branch/master) testing: [![Build status - devel](https://ci.appveyor.com/api/projects/status/vmwq7xarxxj8s564/branch/testing?svg=true)](https://ci.appveyor.com/project/jmp75/pycinterop/branch/testing)
  -->
 
 ![CFFI interop convenience wrapper](./img/cinterop-principles.png "CFFI interop convenience wrapper")
 
-[Marshalling data between C, C++ and other programming languages](https://github.com/csiro-hydroinformatics/rcpp-interop-commons)
+[Marshalling data between C, C++ and other programming languages](https://github.com/csiro-hydroinformatics/c-interop)
 
-This package is primarily for managing and marshalling resources in native libraries, written for instance in C++, from Python. 
+This package is primarily for managing and marshalling resources in native libraries, written for instance in C++, from Python.
 
 ## License
 
-MIT (see [License.txt](https://github.com/csiro-hydroinformatics/rcpp-interop-commons/blob/master/bindings/python/cinterop/LICENSE.txt))
-
-## Documentation
-
-Placeholder 
-
-<!-- Hosted at [pycinterop.readthedocs.io](https://pycinterop.readthedocs.io/en/latest/?badge=latest) -->
+MIT (see [License.txt](https://github.com/csiro-hydroinformatics/c-interop/blob/master/bindings/python/cinterop/LICENSE.txt))
 
 ## Source code
 
-The code repository is on [GitHub](https://github.com/csiro-hydroinformatics/rcpp-interop-commons).
+The code repository is on [GitHub](https://github.com/csiro-hydroinformatics/c-interop).
 
 ## Installation
+
+### pypi
 
 ```sh
 pip install cinterop
 ```
 
-From source:
+### From source (development)
 
 ```sh
 pip install -r requirements.txt

@@ -32,6 +32,12 @@ add_definitions(
    -D_UNICODE
 )
 
+## section: include directory
+include_directories(
+   ../../../../../include/
+)
+
+
 ################# Flags ################
 # Defines Flags for Windows and Linux. #
 ########################################

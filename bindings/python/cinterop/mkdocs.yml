@@ -1,15 +1,125 @@
-site_name: cinterop
+# See 
+# https://github.com/squidfunk/mkdocs-material/blob/master/mkdocs.yml
+# for ideas.
+
+# Project information
+site_name: "cinterop - Python package for c interop"
+# site_url: https://squidfunk.github.io/mkdocs-material/
+site_author: "Jean-Michel Perraud"
+site_description: >-
+  This package is primarily for managing resources, for instance from 
+  native libraries written for instance in C++, from Python.
+
+# Repository
+repo_name: csiro-hydroinformatics/c-interop
+repo_url: https://github.com/csiro-hydroinformatics/c-interop
+
+docs_dir: './docs'
+
+# Copyright
+copyright: Copyright &copy; 2016 - 2022 CSIRO
 
 theme:
-  name: "readthedocs"
-  # name: "material"
+  # name: "readthedocs"
+  name: "material"
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode  # Default values, taken from mkdocs_theme.yml
+  # Don't include MkDocs' JavaScript
+  include_search_page: false
+  search_index_only: true
+  language: en
+  features:
+    - content.code.annotate
+    # - content.tabs.link
+    - content.tooltips
+    # - header.autohide
+    # - navigation.expand
+    - navigation.indexes
+    # - navigation.instant
+    # - navigation.prune
+    - navigation.sections
+    - navigation.tabs
+    # - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    # - toc.integrate
 
 plugins:
   - search
-  - mkdocstrings
+  - mkdocstrings:
+      handlers:
+        # See: https://mkdocstrings.github.io/python/usage/
+        python:
+          options:
+            docstring_style: google
+  # minify seems advanced. https://squidfunk.github.io/mkdocs-material/customization/#theme-development  
+  # - minify:
+  #   minify_html: true
+
+
+
+# Extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  # - pymdownx.emoji:
+  #     emoji_generator: !!python/name:materialx.emoji.to_svg
+  #     emoji_index: !!python/name:materialx.emoji.twemoji
+  - pymdownx.highlight:
+     anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  # - pymdownx.superfences:
+  #     custom_fences:
+  #       - name: mermaid
+  #         class: mermaid
+  #         format: !!python/name:pymdownx.superfences.fence_code_format
+  # - pymdownx.keys
+  # - pymdownx.magiclink:
+  #    repo_url_shorthand: true
+  #    user: csiro-hydroinformatics
+  #    repo: c-interop
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
 
 nav:
   - Home: index.md
-  - Code Documentation: code-reference.md
+  - API Doc:
+    - cffi interop: cffi-marshal-module.md
+    - time series: timeseries-module.md
   - Appendix:
-      - Tech Notes: tech_notes.md
+    - Tech Notes: tech_notes.md
