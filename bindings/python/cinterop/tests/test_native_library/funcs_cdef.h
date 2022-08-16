@@ -5,6 +5,11 @@ void delete_charptr_array(char** ptr, int size);
 char** create_charpp(int* size);
 char* get_charpp_element(char** strings, int index);
 
+double get_array_double(double* arr, int index);
+int get_array_int(int* arr, int index);
+
+double** create_doublepp(int nrows, int ncols);
+void delete_doublepp(double** ptr, int nrows);
 
 void set_date(date_time_to_second * start, int year, int month, int day, int hour, int min, int sec);
 int get_year(date_time_to_second start);

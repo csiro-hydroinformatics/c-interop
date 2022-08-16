@@ -551,7 +551,7 @@ def as_xarray_time_series(ffi:FFI, ptr:CffiData) -> xr.DataArray:
     """as_xarray_time_series"""
     ts_geom = TimeSeriesGeometryNative(ptr.time_series_geometry)
     # npx = two_d_as_np_array_double(ffi, ptr.numeric_data, ts_geom.length, ptr.ensemble_size, True)
-    npx = two_d_as_np_array_double(ffi, ptr.numeric_data, ptr.ensemble_size, ts_geom.length, True)
+    npx = two_d_as_np_array_double(ffi, ptr.numeric_data, ptr.ensemble_size, ts_geom.length)
     time_index = _ts_geom_to_time_index(ts_geom)
     ens_index = [i for i in range(ptr.ensemble_size)]
     x = create_ensemble_series(npx, ens_index, time_index)
@@ -655,25 +655,7 @@ def as_c_double_array(ffi:FFI, data:np.ndarray, shallow:bool=False) -> OwningCff
         ffi.buffer(native_d)[:] = data_c
     return OwningCffiNativeHandle(native_d)
 
-def as_c_char_array(ffi, data, shallow:bool=False) -> OwningCffiNativeHandle:
-    """as_c_char_array"""
-    if isinstance(data, list):
-        data = np.asfarray(data)
-        shallow = False
-    elif not isinstance(data, np.ndarray):
-        raise TypeError("Conversion to a c array of double requires list or np array as input")
-    if shallow and data.flags['C_CONTIGUOUS']:
-        native_d = ffi.cast("char *", data.ctypes.data)
-    else:
-        native_d = new_charptr_array(ffi, data.shape[0])
-        if not data.flags['C_CONTIGUOUS']:
-            data_c = np.ascontiguousarray(data.ctypes.data)
-        else:
-            data_c = data
-        ffi.buffer(native_d)[:] = data_c
-    return OwningCffiNativeHandle(native_d)
-
-def two_d_as_np_array_double(ffi:FFI, ptr:CffiData, nrow:int, ncol:int, shallow:bool=False) -> np.ndarray:
+def two_d_as_np_array_double(ffi:FFI, ptr:CffiData, nrow:int, ncol:int) -> np.ndarray:
     """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats.
 
     Args:
@@ -694,19 +676,16 @@ def two_d_as_np_array_double(ffi:FFI, ptr:CffiData, nrow:int, ncol:int, shallow:
         return np.ndarray(shape=(nrow, ncol))
     else:
         rows = ffi.cast('double*[%d]' % (nrow,), ptr)
-        res = np.vstack([as_numeric_np_array(ffi, rows[i], size=ncol, shallow=False) for i in range(nrow)])
-        if shallow:
-            return res
-        else:
-            return res.copy()
+        # We can use a shallow creation for as_numeric_np_array: np.vstack does a copy anyway.
+        res = np.vstack([as_numeric_np_array(ffi, rows[i], size=ncol, shallow=True) for i in range(nrow)])
+        return res
 
-def two_d_np_array_double_to_native(ffi:FFI, data:np.ndarray, shallow:bool=False) -> OwningCffiNativeHandle:
+def two_d_np_array_double_to_native(ffi:FFI, data:np.ndarray) -> OwningCffiNativeHandle:
     """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats.
 
     Args:
         ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
         data (np.ndarray): data
-        shallow (bool): If true the array points directly to native data array. Defaults to False.
 
     Raises:
         RuntimeError: conversion is not supported
@@ -717,7 +696,7 @@ def two_d_np_array_double_to_native(ffi:FFI, data:np.ndarray, shallow:bool=False
     if not isinstance(data, np.ndarray):
         raise TypeError(
             "Expected np.ndarray, got " + str(type(data)))
-    if not len(data.shape) < 3:
+    if len(data.shape) > 2:
         raise TypeError("Expected an array of dimension 1 or 2, got " + str(len(data.shape)))
 
     if len(data.shape) == 1:
@@ -929,14 +908,13 @@ class CffiMarshal:
         """    
         return as_np_array_double(self._ffi, ptr, size, shallow)
 
-    def two_d_as_np_array_double(self, ptr:CffiData, nrow:int, ncol:int, shallow:bool=False) -> np.ndarray:
+    def two_d_as_np_array_double(self, ptr:CffiData, nrow:int, ncol:int) -> np.ndarray:
         """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats.
 
         Args:
             ptr (CffiData): cffi pointer (FFI.CData)
             nrow (int): number of rows
             ncol (int): number of columns 
-            shallow (bool): If true the array points directly to native data array. Defaults to False.
 
         Raises:
             RuntimeError: conversion is not supported
@@ -944,7 +922,7 @@ class CffiMarshal:
         Returns:
             np.ndarray: converted data
         """
-        return two_d_as_np_array_double(self._ffi, ptr, nrow, ncol, shallow)
+        return two_d_as_np_array_double(self._ffi, ptr, nrow, ncol)
 
     def c_string_as_py_string(self, ptr:CffiData) -> str:
         """Convert if possible a cffi pointer to an ANSI C string <char*> to a python string.
@@ -1137,11 +1115,24 @@ class CffiMarshal:
     def new_ctype_array(self, ctype:str, size:int, wrap=False) -> Union[OwningCffiNativeHandle,CffiData]:
         return new_ctype_array(self._ffi, ctype, size, wrap)
 
+    def new_int_array(self, size:int, wrap=False) -> Union[OwningCffiNativeHandle,CffiData]:
+        return new_int_array(self._ffi, size, wrap)
+
+    def new_double_array(self, size:int, wrap=False) -> Union[OwningCffiNativeHandle,CffiData]:
+        return new_double_array(self._ffi, size, wrap)
+
+    def new_doubleptr_array(self, size:int, wrap=False) -> Union[OwningCffiNativeHandle,CffiData]:
+        return new_doubleptr_array(self._ffi, size, wrap)
+
+    def new_charptr_array(self, size:int, wrap=False) -> Union[OwningCffiNativeHandle,CffiData]:
+        return new_charptr_array(self._ffi, size, wrap)
+
     def as_c_double_array(self, data:np.ndarray, shallow:bool=False) -> OwningCffiNativeHandle:
         return as_c_double_array(self._ffi, data, shallow)
     
-    def as_c_char_array(self, data:np.ndarray, shallow:bool=False) -> OwningCffiNativeHandle:
-        return as_c_char_array(self._ffi, data, shallow)
-
     def as_native_time_series(self, data:TimeSeriesLike) -> OwningCffiNativeHandle:
         return as_native_time_series(self._ffi, data)
+
+    def two_d_np_array_double_to_native(self, data:np.ndarray) -> OwningCffiNativeHandle:
+        return two_d_np_array_double_to_native(self._ffi, data)
+

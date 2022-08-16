@@ -66,6 +66,12 @@ extern "C"
     TESTLIB_API char** create_charpp(int* size);
     TESTLIB_API char* get_charpp_element(char** strings, int index);
 
+    TESTLIB_API double** create_doublepp(int nrows, int ncols);
+    TESTLIB_API void delete_doublepp(double** ptr, int nrows);
+
+    TESTLIB_API double get_array_double(double* arr, int index);
+    TESTLIB_API int get_array_int(int* arr, int index);
+
     TESTLIB_API void set_date(DTS_PTR start, int year, int month, int day, int hour, int min, int sec);
     TESTLIB_API DTS_PTR create_date(int year, int month, int day, int hour, int min, int sec);
     TESTLIB_API void dispose_date(DTS_PTR start);

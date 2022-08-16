@@ -41,6 +41,40 @@ char* get_charpp_element(char** strings, int index){
     return STRDUP(strings[index]);
 }
 
+double get_array_double(double* arr, int index)
+{
+    return arr[index];
+}
+int get_array_int(int* arr, int index)
+{
+    return arr[index];
+}
+
+double** create_doublepp(int nrows, int ncols)
+{
+    int val = 0;
+    double** res = new double*[nrows];
+    for (size_t i = 0; i < nrows; i++)
+    {
+        double* row = new double[ncols];
+        for (size_t j = 0; j < ncols; j++)
+        {
+            row[j] = val;
+            val++;
+        }
+        res[i] = row;
+    }
+    return res;
+}
+
+void delete_doublepp(double** ptr, int nrows)
+{
+    for (size_t i = 0; i < nrows; i++)
+        delete[] ptr[i];
+    delete[] ptr;
+}
+
+
 void set_date(DTS_PTR start, int year, int month, int day, int hour, int min, int sec)
 {
     start->year = year;
