@@ -48,7 +48,7 @@ setClass('RegularTimeSeries',
 )
 
 # 2019-08 Had to move away from using the `prototype` argument in setClass. See 
-# https://github.com/csiro-hydroinformatics/rcpp-interop-commons/issues/4
+# https://github.com/csiro-hydroinformatics/c-interop/issues/4
 # for context.
 # Very non-plussed by R reference classes.
 

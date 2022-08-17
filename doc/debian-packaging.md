@@ -16,7 +16,7 @@ sudo apt install dh-r
 pkgname=libcinterop-dev
 pkgname_ver=${pkgname}-1.1
 fn_ver=${pkgname}_1.1
-SRC=~/src/github_jm/rcpp-interop-commons
+SRC=~/src/github_jm/c-interop
 DEST=~/tmp/cinterop/${pkgname_ver}
 FILES="cinterop.pc.in CMakeLists.txt cmake_uninstall.cmake.in debian/ doc/ include/ LICENSE.txt  README.md"
 
@@ -51,7 +51,7 @@ Possibly `sudo apt install r-cran-generics r-cran-rcpp`.
 pkgname=r-cinterop
 pkgname_ver=${pkgname}-1.1
 fn_ver=${pkgname}_1.1
-SRC=~/src/github_jm/rcpp-interop-commons/bindings/R/pkgs/cinterop
+SRC=~/src/github_jm/c-interop/bindings/R/pkgs/cinterop
 DEST=~/tmp/cinterop/${pkgname_ver}
 FILES="./*"
 

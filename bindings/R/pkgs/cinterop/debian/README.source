@@ -2,7 +2,7 @@ r-cinterop for Debian
 ----------------
 
 r-cinterop can be downloaded from its webpage:
-https://github.com/csiro-hydroinformatics/rcpp-interop-commons
+https://github.com/csiro-hydroinformatics/c-interop
 
 
 Obtaining the Debian source package
@@ -13,8 +13,8 @@ needed to package a new upstream version.
 
 One-time setup steps: get your copy of the Debian source package from Git:
   $ ssh-add
-  $ git clone git@github.com:csiro-hydroinformatics/rcpp-interop-commons.git
-  $ cd rcpp-interop-commons
+  $ git clone git@github.com:csiro-hydroinformatics/c-interop.git
+  $ cd c-interop
   $ # not sure about the following, mimicking from libzip
   $ git checkout -b pristine-tar remotes/origin/pristine-tar
   $ git checkout -b upstream remotes/origin/upstream

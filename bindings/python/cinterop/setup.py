@@ -1,7 +1,7 @@
 """A package for reference counting and interop with native pointers
 
 See:
-https://github.com/csiro-hydroinformatics/rcpp-interop-commons
+https://github.com/csiro-hydroinformatics/c-interop
 """
 
 from setuptools import setup
@@ -85,7 +85,7 @@ setup(
     description='A Python package for reusable interop with native resources from a C API', 
     long_description=long_description,
     long_description_content_type=long_description_content_type,
-    url='https://github.com/csiro-hydroinformatics/rcpp-interop-commons',
+    url='https://github.com/csiro-hydroinformatics/c-interop',
     author='Jean-Michel Perraud',
     author_email='per202@csiro.au',
     classifiers=CLASSIFIERS,
@@ -140,9 +140,9 @@ setup(
     # maintainers, and where to support the project financially. The key is
     # what's used to render the link text on PyPI.
     project_urls={  # Optional
-        'Bug Reports': 'https://github.com/csiro-hydroinformatics/rcpp-interop-commons/issues',
+        'Bug Reports': 'https://github.com/csiro-hydroinformatics/c-interop/issues',
         # 'Funding': 'https://donate.pypi.org',
         # 'Say Thanks!': 'http://saythanks.io/to/example',
-        'Source': 'https://github.com/csiro-hydroinformatics/rcpp-interop-commons',
+        'Source': 'https://github.com/csiro-hydroinformatics/c-interop',
     },
 )

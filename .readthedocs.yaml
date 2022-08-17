@@ -26,7 +26,8 @@ build:
 python:
   install:
     - requirements: bindings/python/cinterop/docs/requirements.txt
-    - method: setuptools
+    # method: setuptools # fails with "error: package directory 'cinterop' does not exist"
+    - method: pip
       path: ./bindings/python/cinterop
 
 ## Tried to use conda; worked for a bit but then failed to work with typehints added

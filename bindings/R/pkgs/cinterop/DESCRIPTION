@@ -8,7 +8,7 @@ Authors@R: c( person("Jean-Michel", "Perraud", email =
 Author: Jean-Michel Perraud [aut, cre]
 Maintainer: Jean-Michel Perraud <per202@csiro.au>
 Description: Reusable constructs for interop with opaque pointers in a C API. Wrapper class around external pointers and simplified structures for holding information about time series, to avoid a dependence on xts header files.
-URL: https://github.com/csiro-hydroinformatics/rcpp-interop-commons
+URL: https://github.com/csiro-hydroinformatics/c-interop
 License: BSD-3
 Imports:
     methods,

@@ -39,3 +39,10 @@ MANIFEST
 _build
 _generate
 build
+out/
+dist/
+cinterop.egg-info/
+.pytest_cache/
+
+.ipynb_checkpoints/
+.coverage

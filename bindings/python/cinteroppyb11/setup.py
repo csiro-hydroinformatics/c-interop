@@ -29,7 +29,7 @@ ext_modules = [
             # Path to pybind11 headers
             get_pybind_include(),
             get_pybind_include(user=True),
-            "C:/src/github_jm/rcpp-interop-commons/include",
+            "C:/src/github_jm/c-interop/include",
             "C:/local/include"
         ],
         libraries = ['moirai'],

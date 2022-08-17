@@ -269,7 +269,7 @@ def test_charpp_returned():
     ut_dll.delete_charptr_array(ptr, size[0])
 
 
-# /home/per202/src/github_jm/rcpp-interop-commons/include/cinterop/common_c_interop.h
+# /home/per202/src/github_jm/c-interop/include/cinterop/common_c_interop.h
 #   25,1: typedef struct _date_time_to_second
 def test_date_time_interop():
     ptr = ut_dll.create_date(2019, 12, 1, 2, 3, 4)

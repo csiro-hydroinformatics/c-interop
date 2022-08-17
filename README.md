@@ -1,6 +1,6 @@
 # Reusable functions for marshalling data between C, C++ and other programming languages
 
-[![license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/csiro-hydroinformatics/rcpp-interop-commons/blob/master/LICENSE.txt)
+[![license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/csiro-hydroinformatics/c-interop/blob/master/LICENSE.txt)
 ![status](https://img.shields.io/badge/status-beta-blue.svg)
 
 [![Python package doc](https://readthedocs.org/projects/cinterop/badge/?version=latest)](https://cinterop.readthedocs.io/en/latest/?badge=latest)

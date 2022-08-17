@@ -14,7 +14,7 @@ Note to self: as of Jan 2019 also using github_jm\didactique\doc\know_how.md to 
 ## Code
 
 ```sh
-cd ${HOME}/src/github_jm/rcpp-interop-commons/bindings/python/cinterop
+cd ${HOME}/src/github_jm/c-interop/bindings/python/cinterop
 ```
 
 If need a separate conda env 
@@ -32,7 +32,7 @@ conda install  wheel twine six pytest
 
 ```sh
 conda activate ${my_env_name}
-cd ${HOME}/src/github_jm/rcpp-interop-commons/bindings/python/cinterop
+cd ${HOME}/src/github_jm/c-interop/bindings/python/cinterop
 rm dist/*
 python setup.py sdist bdist_wheel
 rm dist/*.tar
