@@ -17,14 +17,17 @@ mkdocs:
 # formats:
 #   - pdf
 
+build:
+  os: ubuntu-20.04
+  tools:
+    python: "3.9"
+
 # Optionally set the version of Python and requirements required to build your docs
 python:
-  version: 3.8
   install:
     - requirements: bindings/python/cinterop/docs/requirements.txt
-#      path: ./bindings/python/cinterop
     - method: setuptools
-      path: bindings/python/cinterop
+      path: ./bindings/python/cinterop
 
 ## Tried to use conda; worked for a bit but then failed to work with typehints added
 # on the readthedoc build. but works locally. Revert to pip requirements instead
