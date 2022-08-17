@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 import xarray as xr
 import pandas as pd
 import numpy as np
@@ -23,7 +24,17 @@ ConvertibleToTimestamp = Union[str, datetime, np.datetime64, pd.Timestamp]
 
 def create_even_time_index(
     start: ConvertibleToTimestamp, time_step_seconds: int, n: int
-) -> Union[List, pd.DatetimeIndex]:
+) -> pd.DatetimeIndex:
+    """Creates a regular, evenly spaces time index
+
+    Args:
+        start (ConvertibleToTimestamp): first datetime in the time index
+        time_step_seconds (int): time step length in seconds
+        n (int): length of the index
+
+    Returns:
+        pd.DatetimeIndex: a time index suitable for a time series.
+    """
     if time_step_seconds == 3600:
         return create_hourly_time_index(start, n)
     elif time_step_seconds == 86400:
@@ -36,6 +47,15 @@ def create_even_time_index(
 
 
 def create_daily_time_index(start: ConvertibleToTimestamp, n: int) -> pd.DatetimeIndex:
+    """Creates a daily time index
+
+    Args:
+        start (ConvertibleToTimestamp): first datetime in the time index
+        n (int): length of the index
+
+    Returns:
+        pd.DatetimeIndex: a time index suitable for a time series.
+    """    
     start = as_datetime64(start)
     return pd.date_range(
         start, periods=n, freq="D"
@@ -43,6 +63,15 @@ def create_daily_time_index(start: ConvertibleToTimestamp, n: int) -> pd.Datetim
 
 
 def create_hourly_time_index(start: ConvertibleToTimestamp, n: int) -> pd.DatetimeIndex:
+    """Creates an hourly time index
+
+    Args:
+        start (ConvertibleToTimestamp): first datetime in the time index
+        n (int): length of the index
+
+    Returns:
+        pd.DatetimeIndex: a time index suitable for a time series.
+    """
     start = as_datetime64(start)
     return pd.date_range(
         start, periods=n, freq="H"
@@ -52,11 +81,25 @@ def create_hourly_time_index(start: ConvertibleToTimestamp, n: int) -> pd.Dateti
 def create_monthly_time_index(
     start: ConvertibleToTimestamp, n: int
 ) -> pd.DatetimeIndex:
+    """Creates a monthly time index
+
+    Args:
+        start (ConvertibleToTimestamp): first datetime in the time index
+        n (int): length of the index
+
+    Raises:
+        ValueError: day of month of the start date is more than 28
+
+    Returns:
+        pd.DatetimeIndex: a time index suitable for a time series.
+    """
     start = as_datetime64(start)
+    if start.day > 28:
+        raise ValueError("Monthly time indices require a day of month less than 29. End of months indices are not yet supported.")
     return pd.date_range(start, periods=n, freq=pd.tseries.offsets.DateOffset(months=1))
 
 
-def _is_convertible_to_timestamp(t: Any):
+def _is_convertible_to_timestamp(t: Any) -> bool:
     return (
         isinstance(t, str)
         or isinstance(t, datetime)
@@ -66,6 +109,18 @@ def _is_convertible_to_timestamp(t: Any):
 
 
 def as_timestamp(t: ConvertibleToTimestamp) -> pd.Timestamp:
+    """Converts, if possible, a value to a pandas `Timestamp`
+
+    Args:
+        t (ConvertibleToTimestamp): date time value to convert
+
+    Raises:
+        ValueError: input value is not supported, notably values with time zone informations are excluded
+        TypeError: unexpected input type
+
+    Returns:
+        pd.Timestamp: date time as a pandas Timestamp
+    """    
     # initially work around a breaking change in pandas 1.x: "Expected unicode, got numpy.str_'
 
     # In the future we may support time zones. This is a typically fraught thing, so by default let's stay away from it
@@ -96,10 +151,34 @@ def as_timestamp(t: ConvertibleToTimestamp) -> pd.Timestamp:
 
 
 def as_datetime64(t: ConvertibleToTimestamp) -> np.datetime64:
+    """Convert, if possible, to a numpy datetime64
+
+    Args:
+        t (ConvertibleToTimestamp): date time value to convert
+
+    Raises:
+        ValueError: input value is not supported, notably values with time zone informations are excluded
+        TypeError: unexpected input type
+
+    Returns:
+        np.datetime64: value as a datetime64
+    """
     return as_timestamp(t).to_datetime64()
 
 
 def as_pydatetime(t: ConvertibleToTimestamp) -> datetime:
+    """Convert, if possible, to a datetime
+
+    Args:
+        t (ConvertibleToTimestamp): date time value to convert
+
+    Raises:
+        ValueError: input value is not supported, notably values with time zone informations are excluded
+        TypeError: unexpected input type
+
+    Returns:
+        datetime: value as a datetime
+    """
     return as_timestamp(t).to_pydatetime()
 
 
@@ -111,6 +190,7 @@ def mk_xarray_series(
     colnames: Optional[List[str]] = None,
     fill_miss_func: Optional[Callable] = None,
 ) -> xr.DataArray:
+    """TODO mk_xarray_series"""
     if len(data.shape) > 2:
         raise NotImplementedError("data must be at most of dimension 2")
     if len(data.shape) > 1 and dim_name is None:
@@ -152,6 +232,7 @@ def mk_daily_xarray_series(
     colnames: Optional[List[str]] = None,
     fill_miss_func: Optional[Callable] = None,
 ) -> xr.DataArray:
+    """TODO mk_daily_xarray_series"""
     if len(data.shape) > 2:
         raise NotImplementedError("data must be at most of dimension 2")
     if len(data.shape) > 1 and dim_name is None:
@@ -182,7 +263,7 @@ def mk_hourly_xarray_series(
     return mk_xarray_series(data, dim_name, units, time_index, colnames, fill_miss_func)
 
 
-def set_xr_units(x: xr.DataArray, units: str):
+def set_xr_units(x: xr.DataArray, units: str) -> None:
     """Sets the units attribute of an xr.DataArray. No effect if x is not a dataarray
 
     Args:
@@ -219,13 +300,13 @@ def pd_series_to_xr_series(series: pd.Series) -> xr.DataArray:
     return create_single_series(series.values, series.index)
 
 
-def _pd_index(x):
+def _pd_index(x:TimeSeriesLike) -> pd.DatetimeIndex:
     if not isinstance(x.index, pd.DatetimeIndex):
         raise TypeError("pandas structure; but the index is not an DatetimeIndex")
     return x.index
 
 
-def __ts_index(x: TimeSeriesLike):
+def __ts_index(x: TimeSeriesLike) -> pd.DatetimeIndex:
     if isinstance(x, pd.Series) or isinstance(x, pd.DataFrame):
         return _pd_index(x)
     elif isinstance(x, xr.DataArray):
@@ -236,7 +317,7 @@ def __ts_index(x: TimeSeriesLike):
         )
 
 
-def start_ts(x: TimeSeriesLike):
+def start_ts(x: TimeSeriesLike) -> np.datetime64:
     """Gets the starting date of a time series
 
     Args:
@@ -248,7 +329,7 @@ def start_ts(x: TimeSeriesLike):
     return __ts_index(x)[0]
 
 
-def end_ts(x: TimeSeriesLike):
+def end_ts(x: TimeSeriesLike) -> np.datetime64:
     """Gets the ending date of a time series
 
     Args:
@@ -262,9 +343,11 @@ def end_ts(x: TimeSeriesLike):
 
 # TODO: legacy, I think.
 def xr_ts_start(x:TimeSeriesLike) -> np.datetime64:
+    """Deprecated: use start_ts"""
     return start_ts(x)
 
 def xr_ts_end(x:TimeSeriesLike) -> np.datetime64:
+    """Deprecated: use end_ts"""
     return end_ts(x)
 
 def _time_interval_indx(
@@ -340,7 +423,7 @@ def ts_window(
         to_date (ConvertibleToTimestamp, optional): end date of the window. Defaults to None.
 
     Raises:
-        TypeError: _description_
+        TypeError: unhandled input time for `ts`
 
     Returns:
         TimeSeriesLike: Subset window of the full time series

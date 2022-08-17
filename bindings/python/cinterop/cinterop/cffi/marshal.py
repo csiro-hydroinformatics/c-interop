@@ -490,24 +490,42 @@ def get_native_tsgeom(ffi: FFI, pd_series: "TimeSeriesLike") -> OwningCffiNative
 ## TODO: Generic, non interop time series functions should go "elsewhere"
 
 
-def as_xarray_time_series(ffi: FFI, ptr: CffiData) -> xr.DataArray:
-    """as_xarray_time_series"""
+def as_xarray_time_series(ffi: FFI, ptr: CffiData, name:str=None) -> xr.DataArray:
+    """Converts an native time series structure to an xarray representation
+
+    Args:
+        ffi (FFI): ffi object to the library
+        ptr (CffiData): pointer to the native struct `multi_regular_time_series_data`
+        name (str, optional): name of the returned series. Defaults to None.
+
+    Returns:
+        xr.DataArray: xarray time series
+    """    
     ts_geom = TimeSeriesGeometryNative(ptr.time_series_geometry)
-    # npx = two_d_as_np_array_double(ffi, ptr.numeric_data, ts_geom.length, ptr.ensemble_size, True)
     npx = two_d_as_np_array_double(
         ffi, ptr.numeric_data, ptr.ensemble_size, ts_geom.length
     )
     time_index = _ts_geom_to_time_index(ts_geom)
     ens_index = [i for i in range(ptr.ensemble_size)]
     x = create_ensemble_series(npx, ens_index, time_index)
-    # x.name = variableIdentifier
+    if name is not None:
+        x.name = name
     return x
 
 
 def geom_to_xarray_time_series(
     ts_geom: TimeSeriesGeometryNative, data: np.ndarray, name:str = None
 ) -> xr.DataArray:
-    """geom_to_xarray_time_series"""
+    """Converts an native time series structure to an xarray representation
+
+    Args:
+        ts_geom (TimeSeriesGeometryNative): time series geometry
+        data (np.ndarray): time series data, with one dimension
+        name (str, optional): name of the returned series. Defaults to None.
+
+    Returns:
+        xr.DataArray: xarray time series
+    """
     assert len(data.shape) == 1
     data = data.reshape((1, len(data)))
     time_index = _ts_geom_to_time_index(ts_geom)
@@ -519,7 +537,18 @@ def geom_to_xarray_time_series(
 
 
 def as_native_time_series(ffi: FFI, data: TimeSeriesLike) -> OwningCffiNativeHandle:
-    """as_native_time_series"""
+    """Convert a pure python time series to a native representation via a C struct `multi_regular_time_series_data`
+
+    Args:
+        ffi (FFI): _description_
+        data (TimeSeriesLike): xarray or pandas based time series
+
+    Raises:
+        TypeError: unexpected input type
+
+    Returns:
+        OwningCffiNativeHandle: wrapper to a C struct `multi_regular_time_series_data`
+    """
     ptr = ffi.new("multi_regular_time_series_data*")
     tsg = get_native_tsgeom(ffi, data)
     ptr.time_series_geometry = tsg.obj
@@ -553,7 +582,7 @@ def values_to_nparray(ffi: FFI, ptr: CffiData) -> np.ndarray:
         RuntimeError: conversion is not supported
 
     Returns:
-        Dict[str,float]: converted data
+        np.ndarray: converted data
     """
     return as_np_array_double(ffi, ptr.values, ptr.size, shallow=False)
 
@@ -872,6 +901,11 @@ class CffiMarshal:
 
     @property
     def nullptr(self) -> Any:
+        """The C NULL pointer
+
+        Returns:
+            Any: returns FFI.NULL
+        """        
         return FFI.NULL
 
     def as_np_array_double(
@@ -993,6 +1027,7 @@ class CffiMarshal:
         return dtts_as_datetime(ptr)
 
     def datetime_to_dtts(self, dt: datetime) -> OwningCffiNativeHandle:
+        """TODO docstring"""
         return datetime_to_dtts(self._ffi, dt)
 
     def as_arrayof_bytes(self, obj: List[Any]) -> OwningCffiNativeHandle:
@@ -1032,6 +1067,7 @@ class CffiMarshal:
         return string_map_to_dict(self._ffi, ptr)
 
     def dict_to_string_map(self, data: Dict[str, str]) -> OwningCffiNativeHandle:
+        """TODO docstring"""
         return dict_to_string_map(self._ffi, data)
 
     def as_charptr(self, x: str, wrap:bool=False) -> CffiData:
@@ -1061,6 +1097,7 @@ class CffiMarshal:
         return values_to_nparray(self._ffi, ptr)
 
     def create_values_struct(self, data: Union[List[float], np.ndarray]) -> OwningCffiNativeHandle:
+        """TODO docstring"""
         return create_values_struct(self._ffi, data)
 
     # def time_series_geometry(self, ptr:CffiData) -> TimeSeriesGeometry:
@@ -1075,23 +1112,29 @@ class CffiMarshal:
         return tsgeom.as_native(self._ffi)
 
     def as_xarray_time_series(self, ptr: CffiData) -> xr.DataArray:
+        """TODO docstring"""
         return as_xarray_time_series(self._ffi, ptr)
 
     def get_native_tsgeom(self, pd_series: pd.Series) -> OwningCffiNativeHandle:
+        """TODO docstring"""
         return get_native_tsgeom(self._ffi, pd_series)
 
     def new_native_tsgeom(self) -> TimeSeriesGeometryNative:
+        """TODO docstring"""
         return TimeSeriesGeometryNative(self._ffi)
 
     def new_date_time_to_second(self) -> OwningCffiNativeHandle:
+        """TODO docstring"""
         return new_date_time_to_second(self._ffi)
 
     def new_native_struct(self, type:str) -> OwningCffiNativeHandle:
+        """TODO docstring"""
         return OwningCffiNativeHandle(self._ffi.new(type), type)
 
     def new_ctype_array(
         self, ctype: str, size: int, wrap:bool=False
     ) -> Union[OwningCffiNativeHandle, CffiData]:
+        """TODO docstring"""
         return new_ctype_array(self._ffi, ctype, size, wrap)
 
     def new_int_array(
@@ -1112,27 +1155,33 @@ class CffiMarshal:
     def new_double_array(
         self, size: int, wrap:bool=False
     ) -> Union[OwningCffiNativeHandle, CffiData]:
+        """TODO docstring"""
         return new_double_array(self._ffi, size, wrap)
 
     def new_doubleptr_array(
         self, size: int, wrap:bool=False
     ) -> Union[OwningCffiNativeHandle, CffiData]:
+        """TODO docstring"""
         return new_doubleptr_array(self._ffi, size, wrap)
 
     def new_charptr_array(
         self, size: int, wrap:bool=False
     ) -> Union[OwningCffiNativeHandle, CffiData]:
+        """TODO docstring"""
         return new_charptr_array(self._ffi, size, wrap)
 
     def as_c_double_array(
         self, data: np.ndarray, shallow: bool = False
     ) -> OwningCffiNativeHandle:
+        """TODO docstring"""
         return as_c_double_array(self._ffi, data, shallow)
 
     def as_native_time_series(self, data: TimeSeriesLike) -> OwningCffiNativeHandle:
+        """TODO docstring"""
         return as_native_time_series(self._ffi, data)
 
     def two_d_np_array_double_to_native(
         self, data: np.ndarray
     ) -> OwningCffiNativeHandle:
+        """TODO docstring"""
         return two_d_np_array_double_to_native(self._ffi, data)
