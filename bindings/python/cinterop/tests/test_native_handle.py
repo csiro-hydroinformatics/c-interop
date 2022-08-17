@@ -1,11 +1,12 @@
 import os
+from pathlib import Path
 import sys
 from datetime import datetime
-import gc
-from tracemalloc import start
-import cinterop
+
 from cinterop.cffi.marshal import *
-from cinterop.timeseries import create_daily_time_index, mk_daily_xarray_series, mk_hourly_xarray_series, mk_xarray_series
+
+from cinterop.timeseries import as_datetime64, end_ts, mk_daily_xarray_series, mk_hourly_xarray_series, mk_xarray_series, start_ts, xr_ts_end, xr_ts_start
+
 import pytest
 pkg_dir = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, pkg_dir)
@@ -42,10 +43,6 @@ ut_dll = ut_ffi.dlopen(native_lib_path, 1)  # Lazy loading
 
 marshal = CffiMarshal(ut_ffi)
 
-# NTOE tswindow should probably be out of the marshal module.
-def test_ts_window():
-    raise NotImplementedError()
-
 def test_array_creations():
     x_ptr = new_ctype_array(ut_ffi, "int", 5)
     assert isinstance(x_ptr, FFI.CData)
@@ -55,6 +52,20 @@ def test_array_creations():
     assert ut_dll.get_array_int(x_ptr, 4) == 2
     x_ptr = new_ctype_array(ut_ffi, "int", 5, True)
     assert isinstance(x_ptr, OwningCffiNativeHandle)
+
+    x_ptr = new_int_array(ut_ffi, 5)
+    assert isinstance(x_ptr, FFI.CData)
+    x_ptr[0] = 1
+    x_ptr[4] = 2
+    assert ut_dll.get_array_int(x_ptr, 0) == 1
+    assert ut_dll.get_array_int(x_ptr, 4) == 2
+
+    x_ptr = new_double_array(ut_ffi, 5)
+    assert isinstance(x_ptr, FFI.CData)
+    x_ptr[0] = 1.0
+    x_ptr[4] = 2.0
+    assert ut_dll.get_array_double(x_ptr, 0) == 1.0
+    assert ut_dll.get_array_double(x_ptr, 4) == 2.0
 
 
 def test_charptr():
@@ -117,6 +128,24 @@ def test_as_c_double_array():
     # dtype is int, so shallowness is supported
     _p(xr_ts, wanted_shallow=True, expected_shallow=True, test_indx=3)
 
+def test_as_np_array_double():
+    ptr_c = marshal.new_double_array(9, wrap=False)
+    for i in range(9):
+        ptr_c[i] = float(i)
+    x_np = marshal.as_np_array_double(ptr_c, 9, False)
+    for i in range(9):
+        assert x_np[i] == float(i)
+    ptr_c[0] = 3.1415
+    assert x_np[0] == 0.0
+    ptr_c = marshal.new_double_array(9, wrap=False)
+    for i in range(9):
+        ptr_c[i] = float(i)
+    x_np = marshal.as_np_array_double(ptr_c, 9, True)
+    for i in range(9):
+        assert x_np[i] == float(i)
+    ptr_c[0] = 3.1415
+    assert x_np[0] == 3.1415
+
 def test_as_numeric_np_array():
     ptr_c = marshal.new_double_array(9, wrap=False)
     ptr = marshal._ffi.cast('double *', ptr_c)
@@ -129,6 +158,10 @@ def test_as_numeric_np_array():
     assert x_np.shape == (6,)
     x_np[1] = 3.14
     assert ptr[1] == 3.14
+
+    ptr_c = marshal.new_int_array(9, wrap=False)
+    with pytest.raises(TypeError):
+        _ = marshal.as_numeric_np_array(ptr_c, 9, shallow=True)
 
 def test_two_d_as_np_array_double():
     ptr = marshal.nullptr
@@ -311,7 +344,6 @@ def test_string_string_map():
 #     # ssm = {"c":"C", "d":"D"}
 #     ssm_ptr = marshal.time_step_code(1)
 
-
 def _create_test_series_xr() -> xr.DataArray:
     a = np.array([[1, 2, 3.0], [4, 5, 6.0]])
     e = [1, 2]
@@ -363,6 +395,40 @@ def test_time_series_geometry():
     tsg_ptr = marshal.as_native_tsgeom(tsg)
     assert ut_dll.tscode_tsg(tsg_ptr.obj) == 0
 
+
+def test_geom_to_xarray_time_series():
+    tsgeom = marshal.new_native_tsgeom()
+    tsgeom.length = 9
+    sd = as_datetime64(datetime(2000,1,1))
+    tsgeom.start = sd
+    tsgeom.time_step_code = 0
+    tsgeom.time_step_seconds = 3600
+    d = geom_to_xarray_time_series(ts_geom=tsgeom, data=np.arange(9, dtype=float), name="test_name")
+    assert d.name == "test_name"
+    assert d.shape == (1,9)
+    assert start_ts(d) == sd
+    assert end_ts(d) == as_datetime64("2000-01-01T08")
+
+def test_new_date_time_to_second():
+    w_ptr = marshal.new_date_time_to_second()
+    assert str(w_ptr).startswith("CFFI pointer handle to a native pointer")
+    assert str(w_ptr).find("date_time_to_second") > -1
+
+def test_as_bytes():
+    xs = "abcdef"
+    xb = b"abcdef"
+    assert as_bytes(xb) == xb
+    assert as_bytes(xs) == xb
+    s = Path("blah")
+    assert isinstance(as_bytes(s), Path)
+
+def test_as_string():
+    xs = "abcdef"
+    xb = b"abcdef"
+    assert as_string(xb) == xs
+    assert as_string(xs) == xs
+    s = Path("blah")
+    assert isinstance(as_string(s), Path)
 
 #   35,1: typedef struct _multi_regular_time_series_data
 def test_multi_regular_time_series_data():

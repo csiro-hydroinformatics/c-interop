@@ -6,6 +6,8 @@ from datetime import datetime
 from typing import Any, Union, List, Optional, Callable
 
 TIME_DIM_NAME = "time"
+TIME_DIMNAME = "time"
+ENSEMBLE_DIMNAME = "ensemble"
 
 XR_UNITS_ATTRIB_ID: str = "units"
 """key for the units attribute on xarray DataArray objects"""
@@ -47,7 +49,9 @@ def create_hourly_time_index(start: ConvertibleToTimestamp, n: int) -> pd.Dateti
     )  # much faster than list comprehension
 
 
-def create_monthly_time_index(start: ConvertibleToTimestamp, n: int) -> pd.DatetimeIndex:
+def create_monthly_time_index(
+    start: ConvertibleToTimestamp, n: int
+) -> pd.DatetimeIndex:
     start = as_datetime64(start)
     return pd.date_range(start, periods=n, freq=pd.tseries.offsets.DateOffset(months=1))
 
@@ -61,35 +65,42 @@ def _is_convertible_to_timestamp(t: Any):
     )
 
 
-def as_timestamp(t: ConvertibleToTimestamp, tz=None) -> pd.Timestamp:
-    # work around a breaking change in pandas 1.x: "Expected unicode, got numpy.str_'
-    if isinstance(t, str):
-        t = str(t)
+def as_timestamp(t: ConvertibleToTimestamp) -> pd.Timestamp:
+    # initially work around a breaking change in pandas 1.x: "Expected unicode, got numpy.str_'
+
+    # In the future we may support time zones. This is a typically fraught thing, so by default let's stay away from it
+    tz = None
+
     if _is_convertible_to_timestamp(t):
         if isinstance(t, pd.Timestamp):
-            if tz is None:
-                return t
-            elif t.tz is None:
-                return pd.Timestamp(t, tz=tz)
-            elif str(t.tz) == str(tz):
-                return t
-            else:
+            if t.tz is not None:
                 raise ValueError(
                     "Not supported - Cannot pass a datetime or Timestamp with tzinfo with the tz parameter. Use tz_convert instead"
                 )
-        return pd.Timestamp(t, tz=tz)
+            else:
+                return t
+        elif isinstance(t, datetime):
+            if t.tzinfo is not None:
+                raise ValueError(
+                    "Not supported - Cannot pass a datetime or Timestamp with tzinfo with the tz parameter. Use tz_convert instead"
+                )
+        parsed = pd.Timestamp(t)
+        if parsed.tz is not None:
+            raise ValueError("To avoid ambiguities time zones are not supported. All date times must be 'naive'")
+        else:
+            return parsed
     else:
         raise TypeError(
             "Cannot convert to a timestamp the object of type" + str(type(t))
         )
 
 
-def as_datetime64(t: ConvertibleToTimestamp, tz=None) -> np.datetime64:
-    return as_timestamp(t, tz).to_datetime64()
+def as_datetime64(t: ConvertibleToTimestamp) -> np.datetime64:
+    return as_timestamp(t).to_datetime64()
 
 
-def as_pydatetime(t: ConvertibleToTimestamp, tz=None) -> datetime:
-    return as_timestamp(t, tz=tz).to_pydatetime()
+def as_pydatetime(t: ConvertibleToTimestamp) -> datetime:
+    return as_timestamp(t).to_pydatetime()
 
 
 def mk_xarray_series(
@@ -182,3 +193,164 @@ def set_xr_units(x: xr.DataArray, units: str):
         return
     if isinstance(x, xr.DataArray):
         x.attrs[XR_UNITS_ATTRIB_ID] = units
+
+
+def create_ensemble_series(
+    npx: np.ndarray, ens_index: List, time_index: Union[List, pd.DatetimeIndex]
+) -> xr.DataArray:
+    """Create an ensemble (i.e. special type of multi-variate) time series"""
+    return xr.DataArray(
+        npx, coords=[ens_index, time_index], dims=[ENSEMBLE_DIMNAME, TIME_DIMNAME]
+    )
+
+
+def create_single_series(
+    npx: np.ndarray, time_index: Union[List, pd.DatetimeIndex]
+) -> xr.DataArray:
+    """Create an uni-variate time series"""
+    npx = npx.squeeze()
+    assert len(npx.shape) == 1
+    return xr.DataArray(npx, coords=[time_index], dims=[TIME_DIMNAME])
+
+
+def pd_series_to_xr_series(series: pd.Series) -> xr.DataArray:
+    """Converts a pandas series to an xarray"""
+    assert isinstance(series, pd.Series)
+    return create_single_series(series.values, series.index)
+
+
+def _pd_index(x):
+    if not isinstance(x.index, pd.DatetimeIndex):
+        raise TypeError("pandas structure; but the index is not an DatetimeIndex")
+    return x.index
+
+
+def __ts_index(x: TimeSeriesLike):
+    if isinstance(x, pd.Series) or isinstance(x, pd.DataFrame):
+        return _pd_index(x)
+    elif isinstance(x, xr.DataArray):
+        return x.coords[TIME_DIMNAME].values
+    else:
+        raise TypeError(
+            "Not supported as a representation of a time series: " + str(type(x))
+        )
+
+
+def start_ts(x: TimeSeriesLike):
+    """Gets the starting date of a time series
+
+    Args:
+        x (TimeSeriesLike): time series
+
+    Returns:
+        Any: start of the series
+    """
+    return __ts_index(x)[0]
+
+
+def end_ts(x: TimeSeriesLike):
+    """Gets the ending date of a time series
+
+    Args:
+        x (TimeSeriesLike): time series
+
+    Returns:
+        Any: end of the series
+    """
+    return __ts_index(x)[-1]
+
+
+# TODO: legacy, I think.
+def xr_ts_start(x:TimeSeriesLike) -> np.datetime64:
+    return start_ts(x)
+
+def xr_ts_end(x:TimeSeriesLike) -> np.datetime64:
+    return end_ts(x)
+
+def _time_interval_indx(
+    dt: np.ndarray,
+    from_date: ConvertibleToTimestamp = None,
+    to_date: ConvertibleToTimestamp = None,
+) -> np.ndarray:
+    tt = np.empty_like(dt, bool)
+    tt[:] = True
+    if from_date is not None:
+        tt = np.logical_and(tt, (dt >= as_datetime64(from_date)))
+    if to_date is not None:
+        tt = np.logical_and(tt, (dt <= as_datetime64(to_date)))
+    return tt
+
+
+def slice_xr_time_series(
+    data: xr.DataArray,
+    from_date: ConvertibleToTimestamp = None,
+    to_date: ConvertibleToTimestamp = None,
+) -> xr.DataArray:
+    """Subset a time series to a period
+
+    Args:
+        data (xr.DataArray): input xarray time series
+        from_date (ConvertibleToTimestamp, optional): date, convertible to a timestamp. Defaults to None.
+        to_date (ConvertibleToTimestamp, optional): end date of the slice. Inclusive. Defaults to None.
+
+    Returns:
+        xr.DataArray: a subset time series
+
+    Examples:
+        slice_xr_time_series(unaccounted_indus, from_date='1980-04-01', to_date='2000-04-01')
+    """
+    dt = data.time.values
+    tt = _time_interval_indx(dt, from_date, to_date)
+    return data.sel(time=tt)
+
+
+def slice_pd_time_series(
+    data: pd.Series,
+    from_date: ConvertibleToTimestamp = None,
+    to_date: ConvertibleToTimestamp = None,
+) -> pd.Series:
+    """Subset a time series to a period
+
+    Args:
+        data (pd.Series): input xarray time series
+        from_date (ConvertibleToTimestamp, optional): date, convertible to a timestamp. Defaults to None.
+        to_date (ConvertibleToTimestamp, optional): end date of the slice. Inclusive. Defaults to None.
+
+    Returns:
+        pd.Series: a subset time series
+
+    Examples:
+        slice_pd_time_series(unaccounted_indus, from_date='1980-04-01', to_date='2000-04-01')
+    """
+    dt = data.index
+    tt = _time_interval_indx(dt, from_date, to_date)
+    return data[tt]
+
+
+def ts_window(
+    ts: TimeSeriesLike,
+    from_date: ConvertibleToTimestamp = None,
+    to_date: ConvertibleToTimestamp = None,
+) -> "TimeSeriesLike":
+    """Gets a temporal window of a time series
+
+    Args:
+        ts (TimeSeriesLike): pandas dataframe, series, or xarray DataArray
+        from_date (ConvertibleToTimestamp, optional): start date of the window. Defaults to None.
+        to_date (ConvertibleToTimestamp, optional): end date of the window. Defaults to None.
+
+    Raises:
+        TypeError: _description_
+
+    Returns:
+        TimeSeriesLike: Subset window of the full time series
+
+    Examples:
+        ts_window(unaccounted_indus, from_date='1980-04-01', to_date='2000-04-01')
+    """
+    if isinstance(ts, xr.DataArray):
+        return slice_xr_time_series(ts, from_date, to_date)
+    elif isinstance(ts, pd.Series) or isinstance(ts, pd.DataFrame):
+        return slice_pd_time_series(ts, from_date, to_date)
+    else:
+        raise TypeError("Not supported: " + str(type(ts)))
