@@ -58,4 +58,4 @@ jobs:
     - name: Use Codecov to track coverage
       uses: codecov/codecov-action@v3
       with:
-        files: ./coverage.xml   # coverage report
+        files: bindings/python/cinterop/coverage.xml   # coverage report
