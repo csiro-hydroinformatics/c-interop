@@ -28,7 +28,7 @@ jobs:
       run: |
         mkdir -p build && cd build
         cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_PREFIX_PATH=/usr/local -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON ..
-        make install
+        sudo make install
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
