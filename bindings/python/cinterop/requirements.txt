@@ -4,3 +4,4 @@ xarray
 numpy
 pandas
 six
+typing-extensions
