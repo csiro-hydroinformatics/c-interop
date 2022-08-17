@@ -49,4 +49,12 @@ jobs:
     - name: Test with pytest
       run: |
         cd bindings/python/cinterop
-        pytest
+        pytest tests/ --cov=cinterop --cov-report=xml
+
+    # - name: Mypy type check
+    #   run: poetry run mypy .
+
+    - name: Use Codecov to track coverage
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.xml   # coverage report
