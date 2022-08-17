@@ -1,7 +1,7 @@
 import numpy as np
 from functools import wraps
 
-from typing import Any, Dict, Iterable, List, Union, TYPE_CHECKING
+from typing import Any, Callable, Dict, Iterable, List, Union, TYPE_CHECKING
 from typing_extensions import TypeAlias
 
 from cffi import FFI
@@ -40,7 +40,7 @@ _c2dtype["double *"] = np.dtype("f8")
 # _c2dtype[ 'int *' ] = np.dtype( 'i4' ) TBD
 
 
-def __check_positive_size(size):
+def __check_positive_size(size:int) -> None:
     if size < 0:
         raise ValueError(f"array size must be positive, but got {size}")
 
@@ -338,7 +338,7 @@ class TimeSeriesGeometry:
         self.length = length
         self.time_step_code = time_step_code
 
-    def as_native(self, ffi: FFI):
+    def as_native(self, ffi: FFI) -> 'TimeSeriesGeometryNative':
         """C-compatible representation of a time series geometry
 
         Args:
@@ -391,7 +391,7 @@ class TimeSeriesGeometryNative(OwningCffiNativeHandle):
         return dtts_as_datetime(self._handle.start)
 
     @start.setter
-    def start(self, value):
+    def start(self, value: ConvertibleToTimestamp) -> None:
         dt = as_pydatetime(value)
         _copy_datetime_to_dtts(dt, self._handle.start)
 
@@ -400,7 +400,7 @@ class TimeSeriesGeometryNative(OwningCffiNativeHandle):
         return self._handle.time_step_seconds
 
     @time_step_seconds.setter
-    def time_step_seconds(self, value: int):
+    def time_step_seconds(self, value: int) -> None:
         self._handle.time_step_seconds = value
 
     @property
@@ -408,7 +408,7 @@ class TimeSeriesGeometryNative(OwningCffiNativeHandle):
         return self._handle.length
 
     @length.setter
-    def length(self, value: int):
+    def length(self, value: int) -> None:
         self._handle.length = value
 
     @property
@@ -416,7 +416,7 @@ class TimeSeriesGeometryNative(OwningCffiNativeHandle):
         return self._handle.time_step_code
 
     @time_step_code.setter
-    def time_step_code(self, value: int):
+    def time_step_code(self, value: int) -> None:
         self._handle.time_step_code = value
 
 
@@ -558,7 +558,7 @@ def values_to_nparray(ffi: FFI, ptr: CffiData) -> np.ndarray:
     return as_np_array_double(ffi, ptr.values, ptr.size, shallow=False)
 
 
-def create_values_struct(ffi: FFI, data: np.ndarray) -> OwningCffiNativeHandle:
+def create_values_struct(ffi: FFI, data: Union[List[float], np.ndarray]) -> OwningCffiNativeHandle:
     """create_values_struct"""
     ptr = ffi.new("values_vector*")
     ptr.size = len(data)
@@ -567,7 +567,7 @@ def create_values_struct(ffi: FFI, data: np.ndarray) -> OwningCffiNativeHandle:
 
 
 def as_c_double_array(
-    ffi: FFI, data: np.ndarray, shallow: bool = False
+    ffi: FFI, data: Union[List[float], np.ndarray], shallow: bool = False
 ) -> OwningCffiNativeHandle:
     if isinstance(data, list):
         data = np.asfarray(data)
@@ -732,7 +732,7 @@ def dtts_as_datetime(ptr: CffiData) -> datetime:
     )
 
 
-def _copy_datetime_to_dtts(dt: datetime, ptr):
+def _copy_datetime_to_dtts(dt: datetime, ptr: CffiData) -> None:
     ptr.year = dt.year
     ptr.month = dt.month
     ptr.day = dt.day
@@ -818,13 +818,13 @@ def as_string(obj: Any) -> Union[str, Any]:
     return obj
 
 
-def convert_strings(func):
+def convert_strings(func:Callable) -> Callable:
     """Returns a wrapper that converts any str/unicode object arguments to
     bytes.
     """
 
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs) -> Any:
         """Convert args.
 
         :param func func: Python function wrapping a lakeoned function.
@@ -871,7 +871,7 @@ class CffiMarshal:
         return as_numeric_np_array(self._ffi, ptr, size, shallow)
 
     @property
-    def nullptr(self):
+    def nullptr(self) -> Any:
         return FFI.NULL
 
     def as_np_array_double(
@@ -937,18 +937,6 @@ class CffiMarshal:
             OwningCffiNativeHandle: A wrapper that owns the memory allocated for the resulting `named_values_vector` pointed to
         """
         return dict_to_named_values(self._ffi, data)
-
-    def new_int_array(self, size: int) -> "CffiData":
-        """Creates a new C array of integers `int[n]`
-
-        Args:
-            size (int): array size
-            wrap (bool, optional): return a "naked" cdata pointer object if False, or wrapped in a `OwningCffiNativeHandle` if True. Defaults to False.
-
-        Returns:
-            Union[OwningCffiNativeHandle,CffiData]: a (wrapper to a) cdata pointer object owning a new array of integers of length `size`
-        """
-        return new_int_array(self._ffi, size)
 
     def new_int_scalar_ptr(self, value: int = 0) -> "CffiData":
         """Creates a new C array of integers
@@ -1046,7 +1034,7 @@ class CffiMarshal:
     def dict_to_string_map(self, data: Dict[str, str]) -> OwningCffiNativeHandle:
         return dict_to_string_map(self._ffi, data)
 
-    def as_charptr(self, x: str, wrap=False) -> "CffiData":
+    def as_charptr(self, x: str, wrap:bool=False) -> CffiData:
         """convert an object to `bytes`, create as C array of char and copy values to it. Equivalent to `char arg[] = "world"` if x is the bytes b"world"
 
         Args:
@@ -1058,7 +1046,7 @@ class CffiMarshal:
         """
         return as_charptr(self._ffi, x, wrap)
 
-    def values_to_nparray(self, ptr: CffiData) -> Dict[str, float]:
+    def values_to_nparray(self, ptr: CffiData) -> np.ndarray:
         """Convert if possible a cffi pointer to a `values_vector` struct, into a python array
 
         Args:
@@ -1072,7 +1060,7 @@ class CffiMarshal:
         """
         return values_to_nparray(self._ffi, ptr)
 
-    def create_values_struct(self, data: Iterable[float]) -> OwningCffiNativeHandle:
+    def create_values_struct(self, data: Union[List[float], np.ndarray]) -> OwningCffiNativeHandle:
         return create_values_struct(self._ffi, data)
 
     # def time_series_geometry(self, ptr:CffiData) -> TimeSeriesGeometry:
@@ -1098,31 +1086,41 @@ class CffiMarshal:
     def new_date_time_to_second(self) -> OwningCffiNativeHandle:
         return new_date_time_to_second(self._ffi)
 
-    def new_native_struct(self, type) -> OwningCffiNativeHandle:
+    def new_native_struct(self, type:str) -> OwningCffiNativeHandle:
         return OwningCffiNativeHandle(self._ffi.new(type), type)
 
     def new_ctype_array(
-        self, ctype: str, size: int, wrap=False
+        self, ctype: str, size: int, wrap:bool=False
     ) -> Union[OwningCffiNativeHandle, CffiData]:
         return new_ctype_array(self._ffi, ctype, size, wrap)
 
     def new_int_array(
-        self, size: int, wrap=False
+        self, size: int, wrap:bool=False
     ) -> Union[OwningCffiNativeHandle, CffiData]:
+        """Creates a new C array of integers `int[n]`
+
+        Args:
+            size (int): array size
+            wrap (bool, optional): return a "naked" cdata pointer object if False, or wrapped in a `OwningCffiNativeHandle` if True. Defaults to False.
+
+        Returns:
+            Union[OwningCffiNativeHandle,CffiData]: a (wrapper to a) cdata pointer object owning a new array of integers of length `size`
+        """
+
         return new_int_array(self._ffi, size, wrap)
 
     def new_double_array(
-        self, size: int, wrap=False
+        self, size: int, wrap:bool=False
     ) -> Union[OwningCffiNativeHandle, CffiData]:
         return new_double_array(self._ffi, size, wrap)
 
     def new_doubleptr_array(
-        self, size: int, wrap=False
+        self, size: int, wrap:bool=False
     ) -> Union[OwningCffiNativeHandle, CffiData]:
         return new_doubleptr_array(self._ffi, size, wrap)
 
     def new_charptr_array(
-        self, size: int, wrap=False
+        self, size: int, wrap:bool=False
     ) -> Union[OwningCffiNativeHandle, CffiData]:
         return new_charptr_array(self._ffi, size, wrap)
 
