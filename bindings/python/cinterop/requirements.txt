@@ -3,3 +3,4 @@ refcount>=0.9.3
 xarray
 numpy
 pandas
+six

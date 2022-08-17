@@ -6,6 +6,7 @@ pandas
 mkdocs-material
 mkdocs-material-extensions
 mkdocstrings
+mkdocstrings-python
 # added by readthedocs anyway:
 mock
 pillow

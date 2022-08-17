@@ -53,6 +53,7 @@ REQUIREMENTS = [
     'xarray',
     'numpy',
     'pandas',
+    'six'
 ]
 
 TEST_REQUIREMENTS = ['pytest',
