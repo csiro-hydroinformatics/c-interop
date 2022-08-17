@@ -93,9 +93,10 @@ def create_monthly_time_index(
     Returns:
         pd.DatetimeIndex: a time index suitable for a time series.
     """
-    start = as_datetime64(start)
-    if start.day > 28:
+    pdstart = as_timestamp(start)
+    if pdstart.day > 28:
         raise ValueError("Monthly time indices require a day of month less than 29. End of months indices are not yet supported.")
+    start = as_datetime64(start)
     return pd.date_range(start, periods=n, freq=pd.tseries.offsets.DateOffset(months=1))
 
 
