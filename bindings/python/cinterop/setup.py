@@ -53,6 +53,7 @@ REQUIREMENTS = [
     'xarray',
     'numpy',
     'pandas',
+    'typing-extensions',
     'six'
 ]
 

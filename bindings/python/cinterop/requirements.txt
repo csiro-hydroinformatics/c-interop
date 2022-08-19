@@ -1,7 +1,7 @@
+refcount>=1.1.1
 cffi>=1.11.5
-refcount>=0.9.3
 xarray
 numpy
 pandas
 six
-typing-extensions
+typing-extensions>=4.3.0

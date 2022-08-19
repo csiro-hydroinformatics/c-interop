@@ -7,8 +7,8 @@ on Linux:
 ```sh
 cd tests
 cd test_native_library
-cmake -H. -Bbuild
-cmake --build build -- -j3
+cmake -Bbuild .
+cmake --build build
 ```
 
 ```sh

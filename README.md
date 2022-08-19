@@ -5,6 +5,10 @@
 
 [![Python package doc](https://readthedocs.org/projects/cinterop/badge/?version=latest)](https://cinterop.readthedocs.io/en/latest/?badge=latest)
 
+**Python package**
+
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/csiro-hydroinformatics/c-interop/blob/master/bindings/python/cinterop/LICENSE.txt) ![status](https://img.shields.io/badge/status-beta-blue.svg) [![Documentation Status](https://readthedocs.org/projects/cinterop/badge/?version=latest)](https://cinterop.readthedocs.io/en/latest/?badge=latest) [![codecov](https://codecov.io/gh/csiro-hydroinformatics/c-interop/branch/master/graph/badge.svg?token=Bxg1zkbG9G)](https://codecov.io/gh/csiro-hydroinformatics/c-interop) master: [![Python package](https://github.com/csiro-hydroinformatics/c-interop/actions/workflows/python-cinterop.yml/badge.svg?branch=master)](https://github.com/csiro-hydroinformatics/c-interop/actions/workflows/python-cinterop.yml) testing: [![Python package](https://github.com/csiro-hydroinformatics/c-interop/actions/workflows/python-cinterop.yml/badge.svg?branch=testing)](https://github.com/csiro-hydroinformatics/c-interop/actions/workflows/python-cinterop.yml)
+
 The idea is to have more consistency of vocabulary in interoperability glue code, using template-only C++, also avoiding code duplications across several projects I have (and others have, hopefully).
 
 The code design also captures material that evolved over the years to prevent some "gotchas" one can get into when diving deep in native interop accross compilation modules.
