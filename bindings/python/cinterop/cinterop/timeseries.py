@@ -17,6 +17,8 @@ TimeSeriesLike = Union[pd.Series, pd.DataFrame, xr.DataArray]
 """types that can represent time series 
 """
 
+TsArrayLike = Union[np.ndarray, TimeSeriesLike]
+
 ConvertibleToTimestamp = Union[str, datetime, np.datetime64, pd.Timestamp]
 """types that can be converted with relative unambiguity to a pandas Timestamp 
 """
@@ -189,9 +191,24 @@ def mk_xarray_series(
     units: str = None,
     time_index: Optional[Union[List, pd.DatetimeIndex]] = None,
     colnames: Optional[List[str]] = None,
-    fill_miss_func: Optional[Callable] = None,
+    fill_miss_func: Optional[Callable[[TsArrayLike], TsArrayLike]] = None,
 ) -> xr.DataArray:
-    """TODO mk_xarray_series"""
+    """Create an xarray time series
+
+    Args:
+        data (Union[np.ndarray, TimeSeriesLike]): data from which to create the xarray series
+        dim_name (str, optional): the name of the dimension for a multivariate series. Ignored if univariate. Defaults to None.
+        units (str, optional): units in the time series. Defaults to None.
+        time_index (Optional[Union[List, pd.DatetimeIndex]], optional): the time index of the series. Optional if the input data already has a time index, such as a pandas series. Defaults to None.
+        colnames (Optional[List[str]], optional): names of the columns in a multivariate series. Defaults to None.
+        fill_miss_func (Optional[Callable[[TsArrayLike], TsArrayLike]], optional): optional function that fills in missing values (np.nan). Defaults to None.
+
+    Raises:
+        NotImplementedError: Input arguments are not consistent. 
+
+    Returns:
+        xr.DataArray: output xarray time series with at least a dimension "time"
+    """    
     if len(data.shape) > 2:
         raise NotImplementedError("data must be at most of dimension 2")
     if len(data.shape) > 1 and dim_name is None:
@@ -231,9 +248,24 @@ def mk_daily_xarray_series(
     dim_name: str = None,
     units: str = None,
     colnames: Optional[List[str]] = None,
-    fill_miss_func: Optional[Callable] = None,
+    fill_miss_func: Optional[Callable[[TsArrayLike], TsArrayLike]] = None,
 ) -> xr.DataArray:
-    """TODO mk_daily_xarray_series"""
+    """Create a daily xarray time series
+
+    Args:
+        data (Union[np.ndarray, TimeSeriesLike]): data from which to create the xarray series
+        start_date (ConvertibleToTimestamp): start date of the daily time series
+        dim_name (str, optional): the name of the dimension for a multivariate series. Ignored if univariate. Defaults to None.
+        units (str, optional): units in the time series. Defaults to None.
+        colnames (Optional[List[str]], optional): names of the columns in a multivariate series. Defaults to None.
+        fill_miss_func (Optional[Callable[[TsArrayLike], TsArrayLike]], optional): optional function that fills in missing values (np.nan). Defaults to None.
+
+    Raises:
+        NotImplementedError: Input arguments are not consistent. 
+
+    Returns:
+        xr.DataArray: output xarray time series with at least a dimension "time"
+    """
     if len(data.shape) > 2:
         raise NotImplementedError("data must be at most of dimension 2")
     if len(data.shape) > 1 and dim_name is None:
@@ -251,8 +283,24 @@ def mk_hourly_xarray_series(
     dim_name: str = None,
     units: str = None,
     colnames: Optional[List[str]] = None,
-    fill_miss_func: Optional[Callable] = None,
+    fill_miss_func: Optional[Callable[[TsArrayLike], TsArrayLike]] = None,
 ) -> xr.DataArray:
+    """Create an hourly xarray time series
+
+    Args:
+        data (Union[np.ndarray, TimeSeriesLike]): Data from which to create the xarray series
+        dim_name (str, optional): the name of the dimension for a multivariate series. Ignored if univariate. Defaults to None.
+        units (str, optional): units in the time series. Defaults to None.
+        time_index (Optional[Union[List, pd.DatetimeIndex]], optional): the time index of the series. Optional if the input data already has a time index, such as a pandas series. Defaults to None.
+        colnames (Optional[List[str]], optional): names of the columns in a multivariate series. Defaults to None.
+        fill_miss_func (Optional[Callable[[TsArrayLike], TsArrayLike]], optional): optional function that fills in missing values (np.nan). Defaults to None.
+
+    Raises:
+        NotImplementedError: Input arguments are not consistent. 
+
+    Returns:
+        xr.DataArray: output xarray time series with at least a dimension "time"
+    """    
     if len(data.shape) > 2:
         raise NotImplementedError("data must be at most of dimension 2")
     if len(data.shape) > 1 and dim_name is None:
