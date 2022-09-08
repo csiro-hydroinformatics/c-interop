@@ -352,13 +352,16 @@ def _create_test_series_xr() -> xr.DataArray:
     data = create_ensemble_series(a, e, time_index)
     return data
 
+def _create_univariate_test_series_xr() -> xr.DataArray:
+    a = np.array([1, 2, 3.0])
+    t = as_timestamp("2020-01-01")
+    return mk_daily_xarray_series(a, t)
 
 def _create_test_series_pd_series() -> pd.Series:
     a = np.array([1, 2, 3.0])
     t = as_timestamp("2020-01-01")
     time_index = create_even_time_index(t, 86400, 3)
     return pd.Series(a, index=time_index)
-
 
 def _create_test_series_pd_df() -> pd.DataFrame:
     a = np.array([[1, 2, 3.0], [4, 5, 6.0]]).transpose()
@@ -440,6 +443,13 @@ def test_multi_regular_time_series_data():
     assert x.ptr.numeric_data[1][2] == 6.0
     assert x.ptr.ensemble_size == 2
 
+    data = _create_univariate_test_series_xr()
+    x = as_native_time_series(ut_ffi, data)
+    assert x.ptr.numeric_data[0][0] == 1.0
+    assert x.ptr.numeric_data[0][1] == 2.0
+    assert x.ptr.numeric_data[0][2] == 3.0
+    assert x.ptr.ensemble_size == 1
+
     data = _create_test_series_pd_series()
     x = as_native_time_series(ut_ffi, data)
     assert x.ptr.numeric_data[0][0] == 1.0
@@ -467,4 +477,4 @@ def test_multi_regular_time_series_data():
 #   69,1: typedef struct _multi_statistic_definition
 
 if __name__ == "__main__":
-    test_as_c_double_array()
+    test_multi_regular_time_series_data()

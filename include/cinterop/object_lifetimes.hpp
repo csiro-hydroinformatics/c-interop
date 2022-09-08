@@ -42,12 +42,11 @@ namespace cinterop
 		 * 
 		 * \tparam	F	The type of elements of the array to dispose of
 		 * \param values	array of objects to dispose of by deleting its members, as appropriate, and then delting the heap allocated object itself.
-		 * \param arrayLength	array size
 		 */
 		template<typename F>
-		void free_c_array(F* values, size_t  arrayLength)
+		void free_c_array(F* values)
 		{
-			delete values;
+			delete[] values;
 		}
 
 		/**
@@ -60,6 +59,13 @@ namespace cinterop
 		template<typename F = double>
 		void free_c_ptr_array(F** values, size_t  arrayLength)
 		{
+			if (arrayLength <= 0)
+				// in this case values may be a null pointer, e.g. an interop array was empty. Allow this
+				// as there is nothing to clear. Without this, this can cause issues for 
+				// interop functions that return an empty list of strings.
+				return;
+			if (values == nullptr)
+				throw std::logic_error("free_c_ptr_array: values cannot be a nullptr if the specified array length is positive");
 			for (size_t  i = 0; i < arrayLength; i++)
 				delete[] values[i];
 			delete[] values;
