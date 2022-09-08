@@ -10,6 +10,8 @@
  * 
  */
 
+#include <stdexcept>
+
 namespace cinterop
 {
 	namespace disposal {
