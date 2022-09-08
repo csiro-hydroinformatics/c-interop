@@ -553,7 +553,10 @@ def as_native_time_series(ffi: FFI, data: TimeSeriesLike) -> OwningCffiNativeHan
     tsg = get_native_tsgeom(ffi, data)
     ptr.time_series_geometry = tsg.obj
     if isinstance(data, xr.DataArray):
-        ensemble_size = len(data.coords[ENSEMBLE_DIMNAME].values)
+        if len(data.shape) == 1:
+            ensemble_size = 1
+        else:
+            ensemble_size = len(data.coords[ENSEMBLE_DIMNAME].values)
         np_data = data.values
     elif isinstance(data, pd.Series):
         ensemble_size = 1
