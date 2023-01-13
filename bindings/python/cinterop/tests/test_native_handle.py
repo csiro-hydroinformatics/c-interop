@@ -344,12 +344,14 @@ def test_string_string_map():
 #     # ssm = {"c":"C", "d":"D"}
 #     ssm_ptr = marshal.time_step_code(1)
 
-def _create_test_series_xr() -> xr.DataArray:
+def _create_test_series_xr(ens_dim_first=True) -> xr.DataArray:
     a = np.array([[1, 2, 3.0], [4, 5, 6.0]])
     e = [1, 2]
     t = as_timestamp("2020-01-01")
     time_index = create_even_time_index(t, 86400, 3)
     data = create_ensemble_series(a, e, time_index)
+    if not ens_dim_first:
+        data = data.transpose()
     return data
 
 def _create_univariate_test_series_xr() -> xr.DataArray:
@@ -436,6 +438,14 @@ def test_as_string():
 #   35,1: typedef struct _multi_regular_time_series_data
 def test_multi_regular_time_series_data():
     data = _create_test_series_xr()
+    x = as_native_time_series(ut_ffi, data)
+    assert x.ptr.numeric_data[0][0] == 1.0
+    assert x.ptr.numeric_data[0][2] == 3.0
+    assert x.ptr.numeric_data[1][0] == 4.0
+    assert x.ptr.numeric_data[1][2] == 6.0
+    assert x.ptr.ensemble_size == 2
+
+    data = _create_test_series_xr(ens_dim_first=False)
     x = as_native_time_series(ut_ffi, data)
     assert x.ptr.numeric_data[0][0] == 1.0
     assert x.ptr.numeric_data[0][2] == 3.0
