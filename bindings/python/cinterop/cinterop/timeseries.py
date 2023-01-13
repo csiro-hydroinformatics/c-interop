@@ -1,3 +1,6 @@
+"""Python representations of multidimensional time series and interop with Python cffi"""
+
+
 from multiprocessing.sharedctypes import Value
 import xarray as xr
 import pandas as pd
@@ -9,6 +12,7 @@ from typing import Any, Union, List, Optional, Callable
 TIME_DIM_NAME = "time"
 TIME_DIMNAME = "time"
 ENSEMBLE_DIMNAME = "ensemble"
+LEADTIME_DIMNAME = "lead_time"
 
 XR_UNITS_ATTRIB_ID: str = "units"
 """key for the units attribute on xarray DataArray objects"""
@@ -57,7 +61,7 @@ def create_daily_time_index(start: ConvertibleToTimestamp, n: int) -> pd.Datetim
 
     Returns:
         pd.DatetimeIndex: a time index suitable for a time series.
-    """    
+    """
     start = as_datetime64(start)
     return pd.date_range(
         start, periods=n, freq="D"
@@ -97,7 +101,9 @@ def create_monthly_time_index(
     """
     pdstart = as_timestamp(start)
     if pdstart.day > 28:
-        raise ValueError("Monthly time indices require a day of month less than 29. End of months indices are not yet supported.")
+        raise ValueError(
+            "Monthly time indices require a day of month less than 29. End of months indices are not yet supported."
+        )
     start = as_datetime64(start)
     return pd.date_range(start, periods=n, freq=pd.tseries.offsets.DateOffset(months=1))
 
@@ -123,7 +129,7 @@ def as_timestamp(t: ConvertibleToTimestamp) -> pd.Timestamp:
 
     Returns:
         pd.Timestamp: date time as a pandas Timestamp
-    """    
+    """
     # initially work around a breaking change in pandas 1.x: "Expected unicode, got numpy.str_'
 
     # In the future we may support time zones. This is a typically fraught thing, so by default let's stay away from it
@@ -144,7 +150,9 @@ def as_timestamp(t: ConvertibleToTimestamp) -> pd.Timestamp:
                 )
         parsed = pd.Timestamp(t)
         if parsed.tz is not None:
-            raise ValueError("To avoid ambiguities time zones are not supported. All date times must be 'naive'")
+            raise ValueError(
+                "To avoid ambiguities time zones are not supported. All date times must be 'naive'"
+            )
         else:
             return parsed
     else:
@@ -204,11 +212,11 @@ def mk_xarray_series(
         fill_miss_func (Optional[Callable[[TsArrayLike], TsArrayLike]], optional): optional function that fills in missing values (np.nan). Defaults to None.
 
     Raises:
-        NotImplementedError: Input arguments are not consistent. 
+        NotImplementedError: Input arguments are not consistent.
 
     Returns:
         xr.DataArray: output xarray time series with at least a dimension "time"
-    """    
+    """
     if len(data.shape) > 2:
         raise NotImplementedError("data must be at most of dimension 2")
     if len(data.shape) > 1 and dim_name is None:
@@ -242,6 +250,47 @@ def mk_xarray_series(
     return x
 
 
+def _check_series_data(data, dim_name):
+    if len(data.shape) > 2:
+        raise NotImplementedError("data must be at most of dimension 2")
+    if len(data.shape) > 1 and dim_name is None:
+        raise NotImplementedError(
+            "data has more than one dimension, so the name of the second dimension 'dim_name' must be provided"
+        )
+
+
+def mk_even_step_xarray_series(
+    data: Union[np.ndarray, TimeSeriesLike],
+    start_date: ConvertibleToTimestamp,
+    time_step_seconds: int,
+    dim_name: str = None,
+    units: str = None,
+    colnames: Optional[List[str]] = None,
+    fill_miss_func: Optional[Callable[[TsArrayLike], TsArrayLike]] = None,
+) -> xr.DataArray:
+    """Create an xarray time series with an even time step
+
+    Args:
+        data (Union[np.ndarray, TimeSeriesLike]): data from which to create the xarray series
+        start_date (ConvertibleToTimestamp): start date of the daily time series
+        time_step_seconds (int): time step length in seconds
+        dim_name (str, optional): the name of the dimension for a multivariate series. Ignored if univariate. Defaults to None.
+        units (str, optional): units in the time series. Defaults to None.
+        colnames (Optional[List[str]], optional): names of the columns in a multivariate series. Defaults to None.
+        fill_miss_func (Optional[Callable[[TsArrayLike], TsArrayLike]], optional): optional function that fills in missing values (np.nan). Defaults to None.
+
+    Raises:
+        NotImplementedError: Input arguments are not consistent.
+
+    Returns:
+        xr.DataArray: output xarray time series with at least a dimension "time"
+    """
+    _check_series_data(data, dim_name)
+    n = data.shape[0]
+    time_index = create_even_time_index(start_date, time_step_seconds, n)
+    return mk_xarray_series(data, dim_name, units, time_index, colnames, fill_miss_func)
+
+
 def mk_daily_xarray_series(
     data: Union[np.ndarray, TimeSeriesLike],
     start_date: ConvertibleToTimestamp,
@@ -261,17 +310,12 @@ def mk_daily_xarray_series(
         fill_miss_func (Optional[Callable[[TsArrayLike], TsArrayLike]], optional): optional function that fills in missing values (np.nan). Defaults to None.
 
     Raises:
-        NotImplementedError: Input arguments are not consistent. 
+        NotImplementedError: Input arguments are not consistent.
 
     Returns:
         xr.DataArray: output xarray time series with at least a dimension "time"
     """
-    if len(data.shape) > 2:
-        raise NotImplementedError("data must be at most of dimension 2")
-    if len(data.shape) > 1 and dim_name is None:
-        raise NotImplementedError(
-            "data has more than one dimension, so the name of the second dimension 'dim_name' must be provided"
-        )
+    _check_series_data(data, dim_name)
     n = data.shape[0]
     time_index = create_daily_time_index(start_date, n)
     return mk_xarray_series(data, dim_name, units, time_index, colnames, fill_miss_func)
@@ -296,17 +340,12 @@ def mk_hourly_xarray_series(
         fill_miss_func (Optional[Callable[[TsArrayLike], TsArrayLike]], optional): optional function that fills in missing values (np.nan). Defaults to None.
 
     Raises:
-        NotImplementedError: Input arguments are not consistent. 
+        NotImplementedError: Input arguments are not consistent.
 
     Returns:
         xr.DataArray: output xarray time series with at least a dimension "time"
-    """    
-    if len(data.shape) > 2:
-        raise NotImplementedError("data must be at most of dimension 2")
-    if len(data.shape) > 1 and dim_name is None:
-        raise NotImplementedError(
-            "data has more than one dimension, so the name of the second dimension 'dim_name' must be provided"
-        )
+    """
+    _check_series_data(data, dim_name)
     n = data.shape[0]
     time_index = create_hourly_time_index(start_date, n)
     return mk_xarray_series(data, dim_name, units, time_index, colnames, fill_miss_func)
@@ -349,7 +388,7 @@ def pd_series_to_xr_series(series: pd.Series) -> xr.DataArray:
     return create_single_series(series.values, series.index)
 
 
-def _pd_index(x:TimeSeriesLike) -> pd.DatetimeIndex:
+def _pd_index(x: TimeSeriesLike) -> pd.DatetimeIndex:
     if not isinstance(x.index, pd.DatetimeIndex):
         raise TypeError("pandas structure; but the index is not an DatetimeIndex")
     return x.index
@@ -391,13 +430,15 @@ def end_ts(x: TimeSeriesLike) -> np.datetime64:
 
 
 # TODO: legacy, I think.
-def xr_ts_start(x:TimeSeriesLike) -> np.datetime64:
+def xr_ts_start(x: TimeSeriesLike) -> np.datetime64:
     """Deprecated: use start_ts"""
     return start_ts(x)
 
-def xr_ts_end(x:TimeSeriesLike) -> np.datetime64:
+
+def xr_ts_end(x: TimeSeriesLike) -> np.datetime64:
     """Deprecated: use end_ts"""
     return end_ts(x)
+
 
 def _time_interval_indx(
     dt: np.ndarray,
