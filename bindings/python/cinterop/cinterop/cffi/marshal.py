@@ -1,7 +1,7 @@
 import numpy as np
 from functools import wraps
 
-from typing import Any, Callable, Dict, Iterable, List, Union, TYPE_CHECKING
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union, TYPE_CHECKING
 from typing_extensions import TypeAlias
 
 from cffi import FFI
@@ -490,8 +490,8 @@ def get_native_tsgeom(ffi: FFI, pd_series: "TimeSeriesLike") -> OwningCffiNative
 ## TODO: Generic, non interop time series functions should go "elsewhere"
 
 
-def as_xarray_time_series(ffi: FFI, ptr: CffiData, name:str=None) -> xr.DataArray:
-    """Converts an native time series structure to an xarray representation
+def as_xarray_time_series(ffi: FFI, ptr: CffiData, name:str=None, allow_empty:bool=True) -> Optional[xr.DataArray]:
+    """Converts a native time series structure to an xarray representation
 
     Args:
         ffi (FFI): ffi object to the library
@@ -500,7 +500,9 @@ def as_xarray_time_series(ffi: FFI, ptr: CffiData, name:str=None) -> xr.DataArra
 
     Returns:
         xr.DataArray: xarray time series
-    """    
+    """
+    if allow_empty and ptr.ensemble_size < 0:
+        return None
     ts_geom = TimeSeriesGeometryNative(ptr.time_series_geometry)
     npx = two_d_as_np_array_double(
         ffi, ptr.numeric_data, ptr.ensemble_size, ts_geom.length

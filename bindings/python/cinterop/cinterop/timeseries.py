@@ -373,6 +373,25 @@ def create_ensemble_series(
     )
 
 
+def create_ensemble_forecasts_series(
+    npx: np.ndarray,
+    ens_index: List,
+    lead_time_index: List,
+    time_index: Union[List, pd.DatetimeIndex],
+) -> xr.DataArray:
+    """Create an ensemble forecasts time series (i.e. a series of ensembles of series)"""
+    if npx is None:
+        npx = np.empty(
+            shape=(len(ens_index), len(lead_time_index), len(time_index)), dtype=float
+        )
+        npx[:] = np.nan
+    return xr.DataArray(
+        npx,
+        coords=[ens_index, lead_time_index, time_index],
+        dims=[ENSEMBLE_DIMNAME, LEADTIME_DIMNAME, TIME_DIMNAME],
+    )
+
+
 def create_single_series(
     npx: np.ndarray, time_index: Union[List, pd.DatetimeIndex]
 ) -> xr.DataArray:
