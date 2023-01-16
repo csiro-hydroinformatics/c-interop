@@ -351,6 +351,12 @@ class TimeSeriesGeometry:
             ffi, self.start, self.time_step_seconds, self.length, self.time_step_code
         )
 
+    @staticmethod
+    def from_native(ts_geom: 'TimeSeriesGeometryNative') -> "TimeSeriesGeometry":
+        return TimeSeriesGeometry(
+            ts_geom.start, ts_geom.time_step_seconds, ts_geom.length, ts_geom.time_step_code
+        )
+
 
 class TimeSeriesGeometryNative(OwningCffiNativeHandle):
     """Wrapper around a cdata pointer to a new C struct `regular_time_series_geometry`"""
@@ -418,6 +424,9 @@ class TimeSeriesGeometryNative(OwningCffiNativeHandle):
     @time_step_code.setter
     def time_step_code(self, value: int) -> None:
         self._handle.time_step_code = value
+
+    def time_index(self) -> Union[List, pd.DatetimeIndex]:
+        return _ts_geom_to_time_index(self)
 
 
 def _ts_geom_to_time_index(
@@ -555,11 +564,16 @@ def as_native_time_series(ffi: FFI, data: TimeSeriesLike) -> OwningCffiNativeHan
     tsg = get_native_tsgeom(ffi, data)
     ptr.time_series_geometry = tsg.obj
     if isinstance(data, xr.DataArray):
+        np_data = data.values
         if len(data.shape) == 1:
             ensemble_size = 1
-        else:
+        elif len(data.shape) == 2:
+            assert set(data.variable.dims) == set([ENSEMBLE_DIMNAME,TIME_DIMNAME])
             ensemble_size = len(data.coords[ENSEMBLE_DIMNAME].values)
-        np_data = data.values
+            if not data.variable.dims[0] == ENSEMBLE_DIMNAME:
+                np_data = data.values.transpose()
+        else:
+            raise ValueError("Cannot convert data with more than 2 dimensions")
     elif isinstance(data, pd.Series):
         ensemble_size = 1
         np_data = data.values
