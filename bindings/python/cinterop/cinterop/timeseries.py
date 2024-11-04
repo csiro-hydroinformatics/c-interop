@@ -1,13 +1,11 @@
 """Python representations of multidimensional time series and interop with Python cffi"""
 
-
-from multiprocessing.sharedctypes import Value
-import xarray as xr
-import pandas as pd
-import numpy as np
 from datetime import datetime
+from typing import Any, Callable, List, Optional, Union
 
-from typing import Any, Union, List, Optional, Callable
+import numpy as np
+import pandas as pd
+import xarray as xr
 
 TIME_DIM_NAME = "time"
 TIME_DIMNAME = "time"
@@ -133,8 +131,6 @@ def as_timestamp(t: ConvertibleToTimestamp) -> pd.Timestamp:
     # initially work around a breaking change in pandas 1.x: "Expected unicode, got numpy.str_'
 
     # In the future we may support time zones. This is a typically fraught thing, so by default let's stay away from it
-    tz = None
-
     if _is_convertible_to_timestamp(t):
         if isinstance(t, pd.Timestamp):
             if t.tz is not None:
