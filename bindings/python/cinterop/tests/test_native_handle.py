@@ -39,7 +39,7 @@ with open(os.path.join(cdefs_dir, "structs_cdef.h")) as f_headers:
 with open(os.path.join(cdefs_dir, "funcs_cdef.h")) as f_headers:
     ut_ffi.cdef(f_headers.read())
 
-ut_dll = ut_ffi.dlopen(native_lib_path, 1)  # Lazy loading
+ut_dll = ut_ffi.dlopen(native_lib_path, ut_ffi.RTLD_LAZY)  # Lazy loading
 
 marshal = CffiMarshal(ut_ffi)
 
