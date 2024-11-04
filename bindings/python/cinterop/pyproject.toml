@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cinterop"
-version = "0.9.0"
+version = "1.0.0"
 description = "Python classes for C interop via cffi"
 authors = ["J-M <jean-michel.perraud@csiro.au>"]
 license = "LICENSE.txt"
