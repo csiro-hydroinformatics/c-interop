@@ -15,6 +15,8 @@
 #include <map>
 #include <functional>
 #include <stdexcept>
+#include <iostream>
+#include <sstream>
 
 #include "cinterop/common_c_interop.h"
 #include "cinterop/c_interop_forward_decl.h"
@@ -562,6 +564,24 @@ namespace cinterop
 			}
 		}
 
+		template<>
+		inline std::map<std::string, double> from_named_values_vector<std::map<std::string, double>>(const named_values_vector& nvv)
+		{
+			std::vector<double> values;
+			std::vector<std::string> names;
+			cinterop::utils::to_columns(nvv, names, values);
+			std::map<std::string, double> v;
+			for (size_t i = 0; i < names.size(); i++)
+				if (v.find(names[i]) == v.end())
+					v[names[i]] = values[i];
+				else
+				{
+					std::stringstream ss;
+					ss << "Duplicate key " << names[i] << " found in the named_values_vector. This cannot be converted to a C++ std::map<string,double>.";
+					throw std::logic_error(ss.str());
+				}
+			return v;
+		}
 
 		// Parse a string and cast to a target type.
 		// There appears not to be any equivalent to boost::lexical_cast (TBC for c++14 and later).
