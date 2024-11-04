@@ -622,7 +622,7 @@ def as_c_double_array(
     ffi: FFI, data: Union[List[float], np.ndarray], shallow: bool = False
 ) -> OwningCffiNativeHandle:
     if isinstance(data, list):
-        data = np.asfarray(data)
+        data = np.asarray(data, dtype=float)
         shallow = False
     elif isinstance(data, xr.DataArray):
         data = data.values

@@ -1,9 +1,8 @@
-import os
-import numpy as np
 import cinteroppyb11 as c
+import numpy as np
 
 d = c.DateTimeToSecond()
-c.test_date_time_to_second(d, 0.0,0,0,0,0,0)
+c.test_date_time_to_second(d, 0.0, 0, 0, 0, 0, 0)
 
 d = c.DateTimeToSecond()
 d.year = 2000
