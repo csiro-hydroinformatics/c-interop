@@ -1,18 +1,47 @@
 import os
-from pathlib import Path
 import sys
 from datetime import datetime
+from pathlib import Path
 
-from cinterop.cffi.marshal import *
-
-from cinterop.timeseries import as_datetime64, end_ts, mk_daily_xarray_series, mk_hourly_xarray_series, mk_xarray_series, start_ts, xr_ts_end, xr_ts_start
-
+import numpy as np
+import pandas as pd
 import pytest
+import xarray as xr
+from cffi import FFI
+from cinterop.cffi.marshal import (
+    CffiMarshal,
+    TimeSeriesGeometry,
+    as_bytes,
+    as_native_time_series,
+    as_string,
+    geom_to_xarray_time_series,
+    get_tsgeom,
+    new_ctype_array,
+    new_double_array,
+    new_int_array,
+)
+
+# from cinterop.cffi.marshal import
+from cinterop.timeseries import (
+    as_datetime64,
+    as_timestamp,
+    create_ensemble_series,
+    create_even_time_index,
+    create_monthly_time_index,
+    end_ts,
+    mk_daily_xarray_series,
+    mk_hourly_xarray_series,
+    mk_xarray_series,
+    start_ts,
+    xr_ts_end,
+    xr_ts_start,
+)
+from refcount.interop import OwningCffiNativeHandle
+from refcount.putils import library_short_filename
+
 pkg_dir = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, pkg_dir)
 
-from refcount.interop import *
-from refcount.putils import library_short_filename
 
 fname = library_short_filename("test_native_library")
 
@@ -487,4 +516,4 @@ def test_multi_regular_time_series_data():
 #   69,1: typedef struct _multi_statistic_definition
 
 if __name__ == "__main__":
-    test_multi_regular_time_series_data()
+    test_as_c_double_array()
