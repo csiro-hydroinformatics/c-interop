@@ -622,6 +622,8 @@ def as_c_double_array(
     ffi: FFI, data: Union[List[float], np.ndarray], shallow: bool = False
 ) -> OwningCffiNativeHandle:
     if isinstance(data, list):
+        # Nov 2024 adapt to numpy 2.0 breaking changes 
+        # https://jira.csiro.au/browse/WIRADA-704
         data = np.asarray(data, dtype=float)
         shallow = False
     elif isinstance(data, xr.DataArray):
@@ -638,8 +640,11 @@ def as_c_double_array(
             raise TypeError(
                 "Conversion to a double* array: input data must be of dimension one, and the python array cannot be squeezed to dimension one"
             )
+    # Nov 2024 adapt to numpy 2.0 breaking changes 
+    # https://jira.csiro.au/browse/WIRADA-704
+    # `np.float_` was removed in the NumPy 2.0 release
+    # https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
     if not (data.dtype == np.float64 or data.dtype == float or data.dtype == np.double):
-        # https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
         # TODO: is this wise to override the shallow parameter
         shallow = False
         data = data.astype(np.float64)
