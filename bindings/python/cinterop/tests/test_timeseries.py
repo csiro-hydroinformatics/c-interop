@@ -82,8 +82,10 @@ def test_as_timestamp():
         as_timestamp(pd.Timestamp("2000-01-02 03:04:05", tz=tzinfo))
     with pytest.raises(ValueError):
         as_timestamp(d)
-    with pytest.raises(ValueError):
-        as_timestamp(np.datetime64("2000-01-02 03:04:05 -10:00"))
+    # Below was an attempt, but somewhat misguided; All np.datetime64 are naive, but will parse some time offsets (though deprecation looming)
+    # Not worth testing against here, more confusing than helpful
+    # with pytest.raises(ValueError):
+    #     as_timestamp(np.datetime64("2000-01-02 03:04:05-10:00"))
     with pytest.raises(TypeError):
         as_timestamp(b"2000-01-02 03:04:05 -10:00")
 

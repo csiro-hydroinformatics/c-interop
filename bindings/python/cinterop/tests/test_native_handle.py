@@ -114,6 +114,14 @@ def test_as_c_double_array():
             y_np = x_np.values
         else:
             y_np = x_np
+        # cater for warning: https://github.com/csiro-hydroinformatics/c-interop/issues/9
+        if isinstance(y_np, np.ndarray):
+            if len(y_np.shape)>1:
+                degen_dims = y_np.shape[1:]
+                if not np.all(np.equal(degen_dims, 1)):
+                    raise TypeError("This test should only be done on one-dimensional arrays, or multi-dim arrays that degenerate to one dimension")
+                y_np = np.squeeze(y_np)
+            assert len(y_np.shape) == 1
         for i in range(len(y_np)):
             assert ptr[i] == float(y_np[i])
         init_val = y_np[test_indx]

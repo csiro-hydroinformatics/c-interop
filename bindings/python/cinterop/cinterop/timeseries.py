@@ -78,7 +78,7 @@ def create_hourly_time_index(start: ConvertibleToTimestamp, n: int) -> pd.Dateti
     """
     start = as_datetime64(start)
     return pd.date_range(
-        start, periods=n, freq="H"
+        start, periods=n, freq="h"
     )  # much faster than list comprehension
 
 
