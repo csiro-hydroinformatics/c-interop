@@ -7,7 +7,7 @@ license = "LICENSE.txt"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 cffi = "^1.11.5"
 refcount = "^1.0.0"
 
