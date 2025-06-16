@@ -20,7 +20,7 @@ The `C++` header files cover interop for:
 
 The repo also includes interop packages for several higher level languages, that helps handling consistently (including memory management...) some of the data stemming from the C/C++ glue code:
 
-* python package [cinterop](./bindings/python/cinterop/) also [available on pypi](https://pypi.org/project/cinterop/)
+* python package [cinterop](./bindings/python/cinterop/), also [available on pypi](https://pypi.org/project/cinterop/)
 * R package [cinterop](./bindings/R/pkgs/cinterop/)
 * Matlab [reference counting helpers](./bindings/matlab/)
 
