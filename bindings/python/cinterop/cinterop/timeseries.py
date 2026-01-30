@@ -536,6 +536,11 @@ def ts_window(
     Examples:
         ts_window(unaccounted_indus, from_date='1980-04-01', to_date='2000-04-01')
     """
+    from cinterop.timeseries import as_timestamp
+    if from_date is not None:
+        from_date = as_timestamp(from_date)
+    if to_date is not None:
+        to_date = as_timestamp(to_date)
     if isinstance(ts, xr.DataArray):
         return slice_xr_time_series(ts, from_date, to_date)
     elif isinstance(ts, pd.Series) or isinstance(ts, pd.DataFrame):
