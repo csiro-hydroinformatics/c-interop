@@ -1,0 +1,19 @@
+# Changes here will be overwritten by Copier.
+_commit: 1.11.2
+_src_path: gh:pawamoy/copier-uv
+author_email: jean-michel.perraud@csiro.au
+author_fullname: J-M
+author_username: jmp75
+copyright_date: '2026'
+copyright_holder: J-M
+copyright_holder_email: jean-michel.perraud@csiro.au
+copyright_license: MIT
+project_description: cinterop - helpers for Python-C interop via CFFI
+project_name: c-interop
+python_package_command_line_name: ''
+python_package_distribution_name: cinterop
+python_package_import_name: cinterop
+repository_name: c-interop
+repository_namespace: csiro-hydroinformatics
+repository_provider: github.com
+

@@ -1,39 +1,25 @@
-*.gz
-*.zip
-*.pyc
-*.user
-*.suo
-*.db
-*.opendb
-
-*.tlog
-*.idb
-*.exp
-*csproj.FileListAbsolute.txt
-[Dd]ebug/
-[Rr]elease/
-
-# Visual C++ cache files
-ipch/
-*.aps
-*.ncb
-*.opensdf
-*.sdf
-
-*.opendb
-*.db
-src/obj/
-*.metaproj
-*.tmp
-*/.vs/*
-*.cache
-*.user
-*.code-workspace
+# editors
+.idea/
 .vscode/
-build/
-_build/
-out/
-dist/
-refcount.egg-info/
-.pytest_cache/
 
+# python
+*.egg-info/
+*.py[cod]
+.venv/
+.venvs/
+/build/
+/dist/
+
+# tools
+.coverage*
+/.pdm-build/
+/htmlcov/
+/site/
+uv.lock
+
+# cache
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pycache__/
