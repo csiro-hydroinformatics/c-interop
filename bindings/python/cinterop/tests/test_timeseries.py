@@ -5,6 +5,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import pytest
+
 from cinterop.timeseries import (
     as_datetime64,
     as_timestamp,

@@ -8,6 +8,9 @@ import pandas as pd
 import pytest
 import xarray as xr
 from cffi import FFI
+from refcount.interop import OwningCffiNativeHandle
+from refcount.putils import library_short_filename
+
 from cinterop.cffi.marshal import (
     CffiMarshal,
     TimeSeriesGeometry,
@@ -36,8 +39,6 @@ from cinterop.timeseries import (
     xr_ts_end,
     xr_ts_start,
 )
-from refcount.interop import OwningCffiNativeHandle
-from refcount.putils import library_short_filename
 
 pkg_dir = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, pkg_dir)
@@ -72,6 +73,7 @@ ut_dll = ut_ffi.dlopen(native_lib_path, ut_ffi.RTLD_LAZY)  # Lazy loading
 
 marshal = CffiMarshal(ut_ffi)
 
+
 def test_array_creations():
     x_ptr = new_ctype_array(ut_ffi, "int", 5)
     assert isinstance(x_ptr, FFI.CData)
@@ -100,11 +102,12 @@ def test_array_creations():
 def test_charptr():
     x_ptr = marshal.as_charptr("abcdef")
     assert isinstance(x_ptr, FFI.CData)
-    assert x_ptr[0] == b'a'
-    assert x_ptr[1] == b'b'
-    assert x_ptr[5] == b'f'
+    assert x_ptr[0] == b"a"
+    assert x_ptr[1] == b"b"
+    assert x_ptr[5] == b"f"
     x_ptr = marshal.as_charptr("abcdef", True)
     assert isinstance(x_ptr, OwningCffiNativeHandle)
+
 
 def test_as_c_double_array():
     def _p(x_np, wanted_shallow, expected_shallow, test_indx=3):
@@ -116,10 +119,12 @@ def test_as_c_double_array():
             y_np = x_np
         # cater for warning: https://github.com/csiro-hydroinformatics/c-interop/issues/9
         if isinstance(y_np, np.ndarray):
-            if len(y_np.shape)>1:
+            if len(y_np.shape) > 1:
                 degen_dims = y_np.shape[1:]
                 if not np.all(np.equal(degen_dims, 1)):
-                    raise TypeError("This test should only be done on one-dimensional arrays, or multi-dim arrays that degenerate to one dimension")
+                    raise TypeError(
+                        "This test should only be done on one-dimensional arrays, or multi-dim arrays that degenerate to one dimension"
+                    )
                 y_np = np.squeeze(y_np)
             assert len(y_np.shape) == 1
         for i in range(len(y_np)):
@@ -130,6 +135,7 @@ def test_as_c_double_array():
             assert y_np[test_indx] == 3.1415
         else:
             assert x_np[test_indx] == init_val
+
     x_np = np.arange(9, dtype=int)
     _p(x_np, wanted_shallow=False, expected_shallow=False, test_indx=3)
     _p(x_np, wanted_shallow=True, expected_shallow=False, test_indx=3)
@@ -153,6 +159,7 @@ def test_as_c_double_array():
     _p(fort_np, wanted_shallow=True, expected_shallow=False, test_indx=3)
 
     from cinterop.timeseries import mk_daily_xarray_series
+
     x_np = np.arange(9, dtype=int)
     xr_ts = mk_daily_xarray_series(x_np, "2020-01-01")
     _p(xr_ts, wanted_shallow=False, expected_shallow=False, test_indx=3)
@@ -164,6 +171,7 @@ def test_as_c_double_array():
     _p(xr_ts, wanted_shallow=False, expected_shallow=False, test_indx=3)
     # dtype is int, so shallowness is supported
     _p(xr_ts, wanted_shallow=True, expected_shallow=True, test_indx=3)
+
 
 def test_as_np_array_double():
     ptr_c = marshal.new_double_array(9, wrap=False)
@@ -183,10 +191,12 @@ def test_as_np_array_double():
     ptr_c[0] = 3.1415
     assert x_np[0] == 3.1415
 
+
 def test_as_numeric_np_array():
     ptr_c = marshal.new_double_array(9, wrap=False)
-    ptr = marshal._ffi.cast('double *', ptr_c)
-    for i in range(9): ptr[i] = float(i)
+    ptr = marshal._ffi.cast("double *", ptr_c)
+    for i in range(9):
+        ptr[i] = float(i)
     x_np = marshal.as_numeric_np_array(ptr, 6)
     assert x_np.shape == (6,)
     x_np[1] = 3.14
@@ -200,12 +210,13 @@ def test_as_numeric_np_array():
     with pytest.raises(TypeError):
         _ = marshal.as_numeric_np_array(ptr_c, 9, shallow=True)
 
+
 def test_two_d_as_np_array_double():
     ptr = marshal.nullptr
     x = marshal.two_d_as_np_array_double(ptr, 2, 0)
-    assert x.shape == (2,0)
+    assert x.shape == (2, 0)
     x = marshal.two_d_as_np_array_double(ptr, 0, 2)
-    assert x.shape == (0,2)
+    assert x.shape == (0, 2)
 
     ptr = ut_dll.create_doublepp(3, 4)
     assert ptr[0][0] == 0.0
@@ -215,32 +226,31 @@ def test_two_d_as_np_array_double():
 
     x_np = marshal.two_d_as_np_array_double(ptr, 2, 4)
     assert x_np.shape == (2, 4)
-    assert x_np[0,0] == 0.0
-    assert x_np[0,1] == 1.0
-    assert x_np[0,2] == 2.0
-    assert x_np[1,3] == 7.0
+    assert x_np[0, 0] == 0.0
+    assert x_np[0, 1] == 1.0
+    assert x_np[0, 2] == 2.0
+    assert x_np[1, 3] == 7.0
 
     x_np = marshal.two_d_as_np_array_double(ptr, 2, 4)
     assert x_np.shape == (2, 4)
-    assert x_np[0,0] == 0.0
-    assert x_np[0,1] == 1.0
-    assert x_np[0,2] == 2.0
-    assert x_np[1,3] == 7.0
+    assert x_np[0, 0] == 0.0
+    assert x_np[0, 1] == 1.0
+    assert x_np[0, 2] == 2.0
+    assert x_np[1, 3] == 7.0
 
     # check that we have a deep copy, no shallow copy
 
     x_np = marshal.two_d_as_np_array_double(ptr, 3, 4)
     assert x_np.shape == (3, 4)
-    assert x_np[0,0] == 0.0
-    assert x_np[0,1] == 1.0
-    assert x_np[0,2] == 2.0
-    assert x_np[2,3] == 11.0
+    assert x_np[0, 0] == 0.0
+    assert x_np[0, 1] == 1.0
+    assert x_np[0, 2] == 2.0
+    assert x_np[2, 3] == 11.0
 
     ptr[0][0] = 3.1415
-    assert x_np[0,0] == 0.0
+    assert x_np[0, 0] == 0.0
     ptr[0][1] = 1.234
-    assert x_np[0,1] == 1.0
-
+    assert x_np[0, 1] == 1.0
 
     ut_dll.delete_doublepp(ptr, 3)
 
@@ -254,7 +264,7 @@ def test_two_d_np_array_double_to_native():
             assert ptr[i][j] == x_np[i][j]
 
     with pytest.raises(TypeError):
-        d = datetime(2000,1,1)
+        d = datetime(2000, 1, 1)
         _ = marshal.two_d_np_array_double_to_native(d)
 
     x_np = np.arange(18, dtype=float).reshape((3, 3, 2))
@@ -263,28 +273,28 @@ def test_two_d_np_array_double_to_native():
 
 
 def test_get_tsgeom():
-    d = datetime(2000,1,1)
+    d = datetime(2000, 1, 1)
     data = np.arange(31, dtype=float)
     s = mk_daily_xarray_series(data, d)
     ss = [s, s.to_series(), s.to_dataframe(name="something")]
     for s in ss:
         geom = get_tsgeom(s)
         assert geom.length == 31
-        assert as_datetime64(geom.start) == as_datetime64(d) 
+        assert as_datetime64(geom.start) == as_datetime64(d)
         assert geom.time_step_code == 0
         assert geom.time_step_seconds == 86400
 
     for s in ss:
         assert start_ts(s) == as_datetime64(d)
-        assert end_ts(s) == as_datetime64(datetime(2000,1,31))
+        assert end_ts(s) == as_datetime64(datetime(2000, 1, 31))
         assert xr_ts_start(s) == as_datetime64(d)
-        assert xr_ts_end(s) == as_datetime64(datetime(2000,1,31))
+        assert xr_ts_end(s) == as_datetime64(datetime(2000, 1, 31))
 
     data = np.arange(48, dtype=float)
     s = mk_hourly_xarray_series(data, d)
     geom = get_tsgeom(s)
     assert geom.length == 48
-    assert as_datetime64(geom.start) == as_datetime64(d) 
+    assert as_datetime64(geom.start) == as_datetime64(d)
     assert geom.time_step_code == 0
     assert geom.time_step_seconds == 3600
 
@@ -293,9 +303,10 @@ def test_get_tsgeom():
     s = mk_xarray_series(data, time_index=indx)
     geom = get_tsgeom(s)
     assert geom.length == 12
-    assert as_datetime64(geom.start) == as_datetime64(d) 
+    assert as_datetime64(geom.start) == as_datetime64(d)
     assert geom.time_step_code == 1
     assert geom.time_step_seconds == -1
+
 
 def test_charpp_returned():
     size = marshal.new_int_scalar_ptr()
@@ -370,8 +381,6 @@ def test_string_string_map():
     assert s == "C"
 
 
-#
-
 #   19,1: typedef enum _time_step_code
 # def test_time_step_code():
 #     ptr = ut_dll.create_tsc()
@@ -380,6 +389,7 @@ def test_string_string_map():
 #     # assert ssm["a"] == "A"
 #     # ssm = {"c":"C", "d":"D"}
 #     ssm_ptr = marshal.time_step_code(1)
+
 
 def _create_test_series_xr(ens_dim_first=True) -> xr.DataArray:
     a = np.array([[1, 2, 3.0], [4, 5, 6.0]])
@@ -391,16 +401,19 @@ def _create_test_series_xr(ens_dim_first=True) -> xr.DataArray:
         data = data.transpose()
     return data
 
+
 def _create_univariate_test_series_xr() -> xr.DataArray:
     a = np.array([1, 2, 3.0])
     t = as_timestamp("2020-01-01")
     return mk_daily_xarray_series(a, t)
+
 
 def _create_test_series_pd_series() -> pd.Series:
     a = np.array([1, 2, 3.0])
     t = as_timestamp("2020-01-01")
     time_index = create_even_time_index(t, 86400, 3)
     return pd.Series(a, index=time_index)
+
 
 def _create_test_series_pd_df() -> pd.DataFrame:
     a = np.array([[1, 2, 3.0], [4, 5, 6.0]]).transpose()
@@ -411,7 +424,6 @@ def _create_test_series_pd_df() -> pd.DataFrame:
 
 #   26,1: typedef struct _regular_time_series_geometry
 def test_time_series_geometry():
-
     xr_series = _create_test_series_xr()
     g = get_tsgeom(xr_series)
     assert g.length == 3
@@ -441,20 +453,22 @@ def test_time_series_geometry():
 def test_geom_to_xarray_time_series():
     tsgeom = marshal.new_native_tsgeom()
     tsgeom.length = 9
-    sd = as_datetime64(datetime(2000,1,1))
+    sd = as_datetime64(datetime(2000, 1, 1))
     tsgeom.start = sd
     tsgeom.time_step_code = 0
     tsgeom.time_step_seconds = 3600
     d = geom_to_xarray_time_series(ts_geom=tsgeom, data=np.arange(9, dtype=float), name="test_name")
     assert d.name == "test_name"
-    assert d.shape == (1,9)
+    assert d.shape == (1, 9)
     assert start_ts(d) == sd
     assert end_ts(d) == as_datetime64("2000-01-01T08")
+
 
 def test_new_date_time_to_second():
     w_ptr = marshal.new_date_time_to_second()
     assert str(w_ptr).startswith("CFFI pointer handle to a native pointer")
     assert str(w_ptr).find("date_time_to_second") > -1
+
 
 def test_as_bytes():
     xs = "abcdef"
@@ -464,6 +478,7 @@ def test_as_bytes():
     s = Path("blah")
     assert isinstance(as_bytes(s), Path)
 
+
 def test_as_string():
     xs = "abcdef"
     xb = b"abcdef"
@@ -471,6 +486,7 @@ def test_as_string():
     assert as_string(xs) == xs
     s = Path("blah")
     assert isinstance(as_string(s), Path)
+
 
 #   35,1: typedef struct _multi_regular_time_series_data
 def test_multi_regular_time_series_data():

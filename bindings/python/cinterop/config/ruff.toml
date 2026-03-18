@@ -4,6 +4,7 @@ line-length = 120
 [lint]
 exclude = [
     "tests/fixtures/*.py",
+    "tests/test*.py",
 ]
 select = [
     "A", "ANN", "ARG",
@@ -27,8 +28,6 @@ select = [
 ]
 ignore = [
     "A001",  # Variable is shadowing a Python builtin
-    "ANN101",  # Missing type annotation for self
-    "ANN102",  # Missing type annotation for cls
     "ANN204",  # Missing return type annotation for special method __str__
     "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed
     "ARG005",  # Unused lambda argument
@@ -44,6 +43,8 @@ ignore = [
     "PLR0915",  # Too many statements
     "SLF001", # Private member accessed
     "TRY003",  # Avoid specifying long messages outside the exception class
+    "UP035",  # `typing.List` is deprecated, use `list` instead
+    "UP006",  # `typing.Dict` is deprecated
 ]
 
 [lint.per-file-ignores]
@@ -86,6 +87,7 @@ convention = "google"
 [format]
 exclude = [
     "tests/fixtures/*.py",
+    "tests/test*.py",
 ]
 docstring-code-format = true
 docstring-code-line-length = 80

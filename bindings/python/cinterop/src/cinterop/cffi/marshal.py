@@ -1,3 +1,5 @@
+"""Module to marshal data between Python and C via cffi, with a focus on time series data. This includes functions to convert between native C structs and Python representations, as well as utilities to create and manipulate C arrays from Python data structures."""
+
 from datetime import datetime
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -24,12 +26,12 @@ from cinterop.timeseries import (
 )
 
 NativePointerLike: TypeAlias = Union[OwningCffiNativeHandle, CffiNativeHandle, CffiData]
-"""types that can represent time series 
+"""types that can represent time series
 """
 # if TYPE_CHECKING:
 
 
-_c2dtype = dict()
+_c2dtype = {}
 """Mapping from a C pointer type to a numpy dtypes"""
 
 _c2dtype["float *"] = np.dtype("f4")
@@ -43,7 +45,7 @@ def __check_positive_size(size: int) -> None:
 
 
 def new_int_scalar_ptr(ffi: FFI, value: int = 0) -> "CffiData":
-    """Creates a new C array of integers
+    """Creates a new C array of integers.
 
     Args:
         ffi (FFI): ffi object to the native library accessed
@@ -58,9 +60,12 @@ def new_int_scalar_ptr(ffi: FFI, value: int = 0) -> "CffiData":
 
 
 def new_ctype_array(
-    ffi: FFI, ctype: str, size: int, wrap: bool = False
+    ffi: FFI,
+    ctype: str,
+    size: int,
+    wrap: bool = False,  # noqa: FBT001, FBT002
 ) -> Union[OwningCffiNativeHandle, CffiData]:
-    """_summary_
+    """Creates a new C array of a specified type and size.
 
     Args:
         ffi (FFI): ffi object to the native library accessed
@@ -72,17 +77,18 @@ def new_ctype_array(
         Union[OwningCffiNativeHandle,CffiData]: cdata pointer or wrapper to it.
     """
     __check_positive_size(size)
-    x = ffi.new("%s[%d]" % (ctype, size))
+    x = ffi.new("%s[%d]" % (ctype, size))  # noqa: UP031
     if wrap:
         return OwningCffiNativeHandle(x)
-    else:
-        return x
+    return x
 
 
 def new_int_array(
-    ffi: FFI, size: int, wrap: bool = False
+    ffi: FFI,
+    size: int,
+    wrap: bool = False,  # noqa: FBT001, FBT002
 ) -> Union[OwningCffiNativeHandle, CffiData]:
-    """Creates a new C array of integers `int[n]`
+    """Creates a new C array of integers `int[n]`.
 
     Args:
         ffi (FFI): ffi object to the native library accessed
@@ -96,9 +102,11 @@ def new_int_array(
 
 
 def new_double_array(
-    ffi: FFI, size: int, wrap: bool = False
+    ffi: FFI,
+    size: int,
+    wrap: bool = False,  # noqa: FBT001, FBT002
 ) -> Union[OwningCffiNativeHandle, CffiData]:
-    """Creates a new C array of double precision floats `double[n]`
+    """Creates a new C array of double precision floats `double[n]`.
 
     Args:
         ffi (FFI): ffi object to the native library accessed
@@ -112,9 +120,11 @@ def new_double_array(
 
 
 def new_doubleptr_array(
-    ffi: FFI, size: int, wrap: bool = False
+    ffi: FFI,
+    size: int,
+    wrap: bool = False,  # noqa: FBT001, FBT002
 ) -> Union[OwningCffiNativeHandle, CffiData]:
-    """Creates a new C array of pointers to double precision floats `double*[n]`
+    """Creates a new C array of pointers to double precision floats `double*[n]`.
 
     Args:
         ffi (FFI): ffi object to the native library accessed
@@ -128,9 +138,11 @@ def new_doubleptr_array(
 
 
 def new_charptr_array(
-    ffi: FFI, size: int, wrap: bool = False
+    ffi: FFI,
+    size: int,
+    wrap: bool = False,  # noqa: FBT001, FBT002
 ) -> Union[OwningCffiNativeHandle, CffiData]:
-    """Creates a new C array of pointers to char:  `char*[n]`
+    """Creates a new C array of pointers to char:  `char*[n]`.
 
     Args:
         ffi (FFI): ffi object to the native library accessed
@@ -144,9 +156,11 @@ def new_charptr_array(
 
 
 def as_charptr(
-    ffi: FFI, x: str, wrap: bool = False
+    ffi: FFI,
+    x: str,
+    wrap: bool = False,  # noqa: FBT001, FBT002
 ) -> Union[OwningCffiNativeHandle, CffiData]:
-    """convert an object to `bytes`, create as C array of char and copy values to it. Equivalent to `char arg[] = "world"` if x is the bytes b"world"
+    """Convert an object to `bytes`, create as C array of char and copy values to it. Equivalent to `char arg[] = "world"` if x is the bytes b"world".
 
     Args:
         ffi (FFI): ffi object to the native library accessed
@@ -159,12 +173,14 @@ def as_charptr(
     x = ffi.new("char[]", as_bytes(x))
     if wrap:
         return OwningCffiNativeHandle(x)
-    else:
-        return x
+    return x
 
 
 def as_numeric_np_array(
-    ffi: FFI, ptr: CffiData, size: int, shallow: bool = False
+    ffi: FFI,
+    ptr: CffiData,
+    size: int,
+    shallow: bool = False,  # noqa: FBT001, FBT002
 ) -> np.ndarray:
     """Convert if possible a cffi pointer to a C data array, into a numpy array.
 
@@ -182,29 +198,30 @@ def as_numeric_np_array(
     """
     t = ffi.typeof(ptr).cname  # e.g. 'double *'
     if t not in _c2dtype:
-        raise TypeError("Cannot (yet)create an array for element type: %s" % t)
+        raise TypeError("Cannot (yet)create an array for element type: %s" % t)  # noqa: UP031
     dtype = _c2dtype[t]
     buffer_size = size * dtype.itemsize
     res = np.frombuffer(ffi.buffer(ptr, buffer_size), dtype)
     if shallow:
         return res
-    else:
-        return res.copy()
+    return res.copy()
 
 
 def as_np_array_double(
-    ffi: FFI, ptr: CffiData, size: int, shallow: bool = False
+    ffi: FFI,
+    ptr: CffiData,
+    size: int,
+    shallow: bool = False,  # noqa: FBT001, FBT002
 ) -> np.ndarray:
     """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats `double[n]`.
-        The returned numpy array may be directly pointing to the original data (faster performance), or a deep copy (memory safety - "normal" numpy array)
+
+    The returned numpy array may be directly pointing to the original data (faster performance), or a deep copy (memory safety - "normal" numpy array)
 
     Args:
         ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
         ptr (CffiData): cffi pointer (FFI.CData)
         size (int): array size
-        shallow (bool): If True the resulting numpy array points directly to the native data array.
-        Otherwise, return a numpy array with a deep copy of the data, managed by Python.
-        Defaults to False.
+        shallow (bool): If True the resulting numpy array points directly to the native data array. Otherwise, return a numpy array with a deep copy of the data, managed by Python. Defaults to False.
 
     Raises:
         RuntimeError: conversion is not supported
@@ -212,15 +229,14 @@ def as_np_array_double(
     Returns:
         np.ndarray: converted data
     """
-    res = np.frombuffer(ffi.buffer(ffi.cast("double[%d]" % (size,), ptr)))
+    res = np.frombuffer(ffi.buffer(ffi.cast("double[%d]" % (size,), ptr)))  # noqa: UP031
     if shallow:
         return res
-    else:
-        return res.copy()
+    return res.copy()
 
 
 def named_values_to_dict(ffi: FFI, ptr: CffiData) -> Dict[str, float]:
-    """Convert if possible a cffi pointer to a `named_values_vector` struct, into a dictionary
+    """Convert if possible a cffi pointer to a `named_values_vector` struct, into a dictionary.
 
     Args:
         ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
@@ -238,13 +254,13 @@ def named_values_to_dict(ffi: FFI, ptr: CffiData) -> Dict[str, float]:
     # checks on names being unique
     if len(set(names)) < len(names):
         raise KeyError(
-            "Names of the values are not unique; cannot use as keys to make a dictionary"
+            "Names of the values are not unique; cannot use as keys to make a dictionary",
         )
-    return dict([(names[i], values[i]) for i in range(len(names))])
+    return {names[i]: values[i] for i in range(len(names))}
 
 
 def dict_to_named_values(ffi: FFI, data: Dict[str, float]) -> OwningCffiNativeHandle:
-    """Convert a dictionary to a cffi pointer to a `named_values_vector` struct
+    """Convert a dictionary to a cffi pointer to a `named_values_vector` struct.
 
     Args:
         ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
@@ -265,7 +281,7 @@ def dict_to_named_values(ffi: FFI, data: Dict[str, float]) -> OwningCffiNativeHa
 
 
 def string_map_to_dict(ffi: FFI, ptr: CffiData) -> Dict[str, str]:
-    """Convert if possible a cffi pointer to a `string_string_map` struct, into a dictionary
+    """Convert if possible a cffi pointer to a `string_string_map` struct, into a dictionary.
 
     Args:
         ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
@@ -283,13 +299,13 @@ def string_map_to_dict(ffi: FFI, ptr: CffiData) -> Dict[str, str]:
     # checks on names being unique
     if len(set(keys)) < len(keys):
         raise KeyError(
-            "Names of the values are not unique; cannot use as keys to make a dictionary"
+            "Names of the values are not unique; cannot use as keys to make a dictionary",
         )
-    return dict([(keys[i], values[i]) for i in range(len(keys))])
+    return {keys[i]: values[i] for i in range(len(keys))}
 
 
 def dict_to_string_map(ffi: FFI, data: Dict[str, str]) -> OwningCffiNativeHandle:
-    """Convert a dictionary to a cffi pointer to a `string_string_map` struct
+    """Convert a dictionary to a cffi pointer to a `string_string_map` struct.
 
     Args:
         ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
@@ -311,6 +327,7 @@ def dict_to_string_map(ffi: FFI, data: Dict[str, str]) -> OwningCffiNativeHandle
 
 class TimeSeriesGeometry:
     """Simplified representation of the temporal geometry of a time series.
+
     Suitable for interop with the C struct `regular_time_series_geometry`
     """
 
@@ -322,6 +339,7 @@ class TimeSeriesGeometry:
         time_step_code: int = 0,
     ):
         """Simplified representation of the temporal geometry of a time series.
+
         Suitable for interop with the C struct `regular_time_series_geometry`
 
         Args:
@@ -336,7 +354,7 @@ class TimeSeriesGeometry:
         self.time_step_code = time_step_code
 
     def as_native(self, ffi: FFI) -> "TimeSeriesGeometryNative":
-        """C-compatible representation of a time series geometry
+        """C-compatible representation of a time series geometry.
 
         Args:
             ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
@@ -345,11 +363,16 @@ class TimeSeriesGeometry:
             TimeSeriesGeometryNative: wrapper around a cdata pointer to a new C struct `regular_time_series_geometry`
         """
         return TimeSeriesGeometryNative(
-            ffi, self.start, self.time_step_seconds, self.length, self.time_step_code
+            ffi,
+            self.start,
+            self.time_step_seconds,
+            self.length,
+            self.time_step_code,
         )
 
     @staticmethod
     def from_native(ts_geom: "TimeSeriesGeometryNative") -> "TimeSeriesGeometry":
+        """Create a simplified time series geometry from a native representation."""
         return TimeSeriesGeometry(
             ts_geom.start,
             ts_geom.time_step_seconds,
@@ -359,7 +382,7 @@ class TimeSeriesGeometry:
 
 
 class TimeSeriesGeometryNative(OwningCffiNativeHandle):
-    """Wrapper around a cdata pointer to a new C struct `regular_time_series_geometry`"""
+    """Wrapper around a cdata pointer to a new C struct `regular_time_series_geometry`."""
 
     def __init__(
         self,
@@ -369,7 +392,7 @@ class TimeSeriesGeometryNative(OwningCffiNativeHandle):
         length: int = 1,
         time_step_code: int = 0,
     ):
-        """Wrapper around a cdata pointer to a new C struct `regular_time_series_geometry`
+        """Wrapper around a cdata pointer to a new C struct `regular_time_series_geometry`.
 
         Args:
             ffi (Union[FFI, CffiData]): FFI instance, or a preexisting cdata pointer to a `regular_time_series_geometry` struct
@@ -379,13 +402,17 @@ class TimeSeriesGeometryNative(OwningCffiNativeHandle):
             time_step_code (int, optional): type of time step: 0 for even time steps, or 1 for monthly, in which case `time_step_seconds` is overriden. Defaults to 0.
         """
         if isinstance(ffi, FFI.CData):  # HACK? rethink
-            super(TimeSeriesGeometryNative, self).__init__(
-                ffi, "regular_time_series_geometry*", 0
+            super(TimeSeriesGeometryNative, self).__init__(  # noqa: UP008
+                ffi,
+                "regular_time_series_geometry*",
+                0,
             )
         else:
             ptr = ffi.new("regular_time_series_geometry*")
-            super(TimeSeriesGeometryNative, self).__init__(
-                ptr, "regular_time_series_geometry*", 0
+            super(TimeSeriesGeometryNative, self).__init__(  # noqa: UP008
+                ptr,
+                "regular_time_series_geometry*",
+                0,
             )
             self.start = start if start is not None else as_pydatetime("1970-01-01")
             self.time_step_seconds = time_step_seconds
@@ -394,6 +421,7 @@ class TimeSeriesGeometryNative(OwningCffiNativeHandle):
 
     @property
     def start(self) -> datetime:
+        """Start date of the time series."""
         return dtts_as_datetime(self._handle.start)
 
     @start.setter
@@ -403,6 +431,7 @@ class TimeSeriesGeometryNative(OwningCffiNativeHandle):
 
     @property
     def time_step_seconds(self) -> int:
+        """Time step length in seconds, used if this is a regular time step."""
         return self._handle.time_step_seconds
 
     @time_step_seconds.setter
@@ -411,6 +440,7 @@ class TimeSeriesGeometryNative(OwningCffiNativeHandle):
 
     @property
     def length(self) -> int:
+        """Number of items in the time series."""
         return self._handle.length
 
     @length.setter
@@ -419,6 +449,7 @@ class TimeSeriesGeometryNative(OwningCffiNativeHandle):
 
     @property
     def time_step_code(self) -> int:
+        """Type of time step: 0 for even time steps, or 1 for monthly, in which case `time_step_seconds` is overriden."""
         return self._handle.time_step_code
 
     @time_step_code.setter
@@ -426,6 +457,7 @@ class TimeSeriesGeometryNative(OwningCffiNativeHandle):
         self._handle.time_step_code = value
 
     def time_index(self) -> Union[List, pd.DatetimeIndex]:
+        """Get the time index corresponding to this time series geometry."""
         return _ts_geom_to_time_index(self)
 
 
@@ -437,14 +469,13 @@ def _ts_geom_to_time_index(
         return create_even_time_index(start, ts_geom.time_step_seconds, ts_geom.length)
     if ts_geom.time_step_code == 1:
         return create_monthly_time_index(start, ts_geom.length)
-    else:
-        raise NotImplementedError(
-            "Unrecognised time step code '{}'".format(ts_geom.time_step_code)
-        )
+    raise NotImplementedError(
+        f"Unrecognised time step code '{ts_geom.time_step_code}'",
+    )
 
 
 def as_native_tsgeom(ffi: FFI, tsgeom: TimeSeriesGeometry) -> TimeSeriesGeometryNative:
-    """convert a simlified time series geometry to a native representation
+    """Convert a simlified time series geometry to a native representation.
 
     Args:
         ffi (Union[FFI, CffiData]): FFI instance, or a preexisting cdata pointer to a `regular_time_series_geometry` struct
@@ -457,7 +488,7 @@ def as_native_tsgeom(ffi: FFI, tsgeom: TimeSeriesGeometry) -> TimeSeriesGeometry
 
 
 def get_tsgeom(data: TimeSeriesLike) -> TimeSeriesGeometry:
-    """Extract a simplified representation of the geometry of a time series. A simple heuristic is used to find the time step
+    """Extract a simplified representation of the geometry of a time series. A simple heuristic is used to find the time step.
 
     Args:
         data (TimeSeriesLike): A pandas or xarray representation of a time series, with the pandas index or "time" dimension expected.
@@ -470,15 +501,13 @@ def get_tsgeom(data: TimeSeriesLike) -> TimeSeriesGeometry:
     """
     if isinstance(data, xr.DataArray):
         indx = data.coords[TIME_DIMNAME].values
-    elif isinstance(data, pd.Series):
-        indx = _pd_index(data)
-    elif isinstance(data, pd.DataFrame):
+    elif isinstance(data, (pd.Series, pd.DataFrame)):
         indx = _pd_index(data)
     else:
         raise TypeError("Not recognised as a type of time series: " + str(type(data)))
-    if len(indx) < 2:
+    if len(indx) < 2:  # noqa: PLR2004
         raise ValueError(
-            "There must be at least two entries in the time series to guess the time step length"
+            "There must be at least two entries in the time series to guess the time step length",
         )
     a = as_timestamp(indx[0])
     b = as_timestamp(indx[1])
@@ -492,6 +521,18 @@ def get_tsgeom(data: TimeSeriesLike) -> TimeSeriesGeometry:
 
 
 def get_native_tsgeom(ffi: FFI, pd_series: "TimeSeriesLike") -> OwningCffiNativeHandle:
+    """Get a native representation of the geometry of a time series. A simple heuristic is used to find the time step.
+
+    Args:
+        ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
+        pd_series (TimeSeriesLike): A pandas or xarray representation of a time series, with the pandas index or "time" dimension expected.
+
+    Raises:
+        TypeError: Unexpected type of data
+
+    Returns:
+        OwningCffiNativeHandle: wrapper to a cdata pointer to a new C struct `regular_time_series_geometry`
+    """
     # stopifnot(xts::is.xts(pd_series))
     return as_native_tsgeom(ffi, get_tsgeom(pd_series))
 
@@ -500,9 +541,12 @@ def get_native_tsgeom(ffi: FFI, pd_series: "TimeSeriesLike") -> OwningCffiNative
 
 
 def as_xarray_time_series(
-    ffi: FFI, ptr: CffiData, name: str = None, allow_empty: bool = True
+    ffi: FFI,
+    ptr: CffiData,
+    name: Optional[str] = None,
+    allow_empty: bool = True,  # noqa: FBT001, FBT002
 ) -> Optional[xr.DataArray]:
-    """Converts a native time series structure to an xarray representation
+    """Converts a native time series structure to an xarray representation.
 
     Args:
         ffi (FFI): ffi object to the library
@@ -516,10 +560,13 @@ def as_xarray_time_series(
         return None
     ts_geom = TimeSeriesGeometryNative(ptr.time_series_geometry)
     npx = two_d_as_np_array_double(
-        ffi, ptr.numeric_data, ptr.ensemble_size, ts_geom.length
+        ffi,
+        ptr.numeric_data,
+        ptr.ensemble_size,
+        ts_geom.length,
     )
     time_index = _ts_geom_to_time_index(ts_geom)
-    ens_index = [i for i in range(ptr.ensemble_size)]
+    ens_index = list(range(ptr.ensemble_size))
     x = create_ensemble_series(npx, ens_index, time_index)
     if name is not None:
         x.name = name
@@ -527,9 +574,11 @@ def as_xarray_time_series(
 
 
 def geom_to_xarray_time_series(
-    ts_geom: TimeSeriesGeometryNative, data: np.ndarray, name: str = None
+    ts_geom: TimeSeriesGeometryNative,
+    data: np.ndarray,
+    name: Optional[str] = None,
 ) -> xr.DataArray:
-    """Converts an native time series structure to an xarray representation
+    """Converts an native time series structure to an xarray representation.
 
     Args:
         ts_geom (TimeSeriesGeometryNative): time series geometry
@@ -539,7 +588,8 @@ def geom_to_xarray_time_series(
     Returns:
         xr.DataArray: xarray time series
     """
-    assert len(data.shape) == 1
+    if len(data.shape) != 1:
+        raise ValueError("Expected data to be a 1D array, but got shape " + str(data.shape))
     data = data.reshape((1, len(data)))
     time_index = _ts_geom_to_time_index(ts_geom)
     ens_index = [0]
@@ -550,7 +600,7 @@ def geom_to_xarray_time_series(
 
 
 def as_native_time_series(ffi: FFI, data: TimeSeriesLike) -> OwningCffiNativeHandle:
-    """Convert a pure python time series to a native representation via a C struct `multi_regular_time_series_data`
+    """Convert a pure python time series to a native representation via a C struct `multi_regular_time_series_data`.
 
     Args:
         ffi (FFI): _description_
@@ -569,10 +619,13 @@ def as_native_time_series(ffi: FFI, data: TimeSeriesLike) -> OwningCffiNativeHan
         np_data = data.values
         if len(data.shape) == 1:
             ensemble_size = 1
-        elif len(data.shape) == 2:
-            assert set(data.variable.dims) == set([ENSEMBLE_DIMNAME, TIME_DIMNAME])
+        elif len(data.shape) == 2:  # noqa: PLR2004
+            if not set(data.variable.dims) == {ENSEMBLE_DIMNAME, TIME_DIMNAME}:
+                raise ValueError(
+                    "Expected dimensions of the data array to be exactly 'ensemble' and 'time', but got: " + str(data.variable.dims),
+                )
             ensemble_size = len(data.coords[ENSEMBLE_DIMNAME].values)
-            if not data.variable.dims[0] == ENSEMBLE_DIMNAME:
+            if data.variable.dims[0] != ENSEMBLE_DIMNAME:
                 np_data = data.values.transpose()
         else:
             raise ValueError("Cannot convert data with more than 2 dimensions")
@@ -593,7 +646,7 @@ def as_native_time_series(ffi: FFI, data: TimeSeriesLike) -> OwningCffiNativeHan
 
 
 def values_to_nparray(ffi: FFI, ptr: CffiData) -> np.ndarray:
-    """Convert if possible a cffi pointer to a `values_vector` struct, into a python array
+    """Convert if possible a cffi pointer to a `values_vector` struct, into a python array.
 
     Args:
         ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
@@ -609,9 +662,18 @@ def values_to_nparray(ffi: FFI, ptr: CffiData) -> np.ndarray:
 
 
 def create_values_struct(
-    ffi: FFI, data: Union[List[float], np.ndarray]
+    ffi: FFI,
+    data: Union[List[float], np.ndarray],
 ) -> OwningCffiNativeHandle:
-    """create_values_struct"""
+    """Convert a list or array of numeric values to a cffi pointer to a `values_vector` struct.
+
+    Args:
+        ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
+        data (Union[List[float], np.ndarray]): list or array of numeric values
+
+    Returns:
+        OwningCffiNativeHandle: A wrapper that owns the memory allocated for the resulting `values_vector` pointed to.
+    """
     ptr = ffi.new("values_vector*")
     ptr.size = len(data)
     ptr.values = as_c_double_array(ffi, data).ptr
@@ -619,10 +681,26 @@ def create_values_struct(
 
 
 def as_c_double_array(
-    ffi: FFI, data: Union[List[float], np.ndarray], shallow: bool = False
+    ffi: FFI,
+    data: Union[List[float], np.ndarray],
+    shallow: bool = False,  # noqa: FBT001, FBT002
 ) -> OwningCffiNativeHandle:
+    """Convert a list or array of numeric values to a cffi pointer to a C array of double precision floats.
+
+    Args:
+        ffi (FFI): FFI instance wrapping the native compilation module owning the native memory
+        data (Union[List[float], np.ndarray]): list or array of numeric values
+        shallow (bool, optional): If True the resulting C array points directly to the data in the input numpy array (if it is a numpy array),
+            otherwise a new C array is created and the data is copied to it. Defaults to False.
+            Note that if the input data is a list, it will be converted to a numpy array and the resulting C array will not be shallow.
+
+    Raises:
+        RuntimeError: conversion is not supported
+    Returns:
+        OwningCffiNativeHandle: A wrapper that owns the memory allocated for the resulting C array of double precision floats.
+    """
     if isinstance(data, list):
-        # Nov 2024 adapt to numpy 2.0 breaking changes 
+        # Nov 2024 adapt to numpy 2.0 breaking changes
         # https://jira.csiro.au/browse/WIRADA-704
         data = np.asarray(data, dtype=float)
         shallow = False
@@ -631,20 +709,20 @@ def as_c_double_array(
         # shallow = False # really needed??
     elif not isinstance(data, np.ndarray):
         raise TypeError(
-            "Conversion to a c array of double requires list or np array as input"
+            "Conversion to a c array of double requires list or np array as input",
         )
     if len(data.shape) > 1:
         data = data.squeeze()
         shallow = False
         if len(data.shape) > 1:
             raise TypeError(
-                "Conversion to a double* array: input data must be of dimension one, and the python array cannot be squeezed to dimension one"
+                "Conversion to a double* array: input data must be of dimension one, and the python array cannot be squeezed to dimension one",
             )
-    # Nov 2024 adapt to numpy 2.0 breaking changes 
+    # Nov 2024 adapt to numpy 2.0 breaking changes
     # https://jira.csiro.au/browse/WIRADA-704
     # `np.float_` was removed in the NumPy 2.0 release
     # https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
-    if not (data.dtype == np.float64 or data.dtype == float or data.dtype == np.double):
+    if data.dtype not in (np.float64, float, np.double):
         # TODO: is this wise to override the shallow parameter
         shallow = False
         data = data.astype(np.float64)
@@ -652,16 +730,16 @@ def as_c_double_array(
         native_d = ffi.cast("double *", data.ctypes.data)
     else:
         native_d = new_double_array(ffi, data.shape[0])
-        if not data.flags["C_CONTIGUOUS"]:
-            data_c = np.ascontiguousarray(data)
-        else:
-            data_c = data
+        data_c = np.ascontiguousarray(data) if not data.flags["C_CONTIGUOUS"] else data
         ffi.buffer(native_d)[:] = data_c
     return OwningCffiNativeHandle(native_d)
 
 
 def two_d_as_np_array_double(
-    ffi: FFI, ptr: CffiData, nrow: int, ncol: int
+    ffi: FFI,
+    ptr: CffiData,
+    nrow: int,
+    ncol: int,
 ) -> np.ndarray:
     """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats.
 
@@ -670,7 +748,6 @@ def two_d_as_np_array_double(
         ptr (CffiData): cffi pointer (FFI.CData)
         nrow (int): number of rows
         ncol (int): number of columns
-        shallow (bool): If true the array points directly to native data array. Defaults to False.
 
     Raises:
         RuntimeError: conversion is not supported
@@ -683,20 +760,17 @@ def two_d_as_np_array_double(
         nrow == 0 or ncol == 0
     ):  # do not cast a native ptr that is likely nullptr or worse. Following works thankfully as an edge case.
         return np.ndarray(shape=(nrow, ncol))
-    else:
-        rows = ffi.cast("double*[%d]" % (nrow,), ptr)
-        # We can use a shallow creation for as_numeric_np_array: np.vstack does a copy anyway.
-        res = np.vstack(
-            [
-                as_numeric_np_array(ffi, rows[i], size=ncol, shallow=True)
-                for i in range(nrow)
-            ]
-        )
-        return res
+    rows = ffi.cast("double*[%d]" % (nrow,), ptr)  # noqa: UP031
+    # We can use a shallow creation for as_numeric_np_array: np.vstack does a copy anyway.
+    res = np.vstack(
+        [as_numeric_np_array(ffi, rows[i], size=ncol, shallow=True) for i in range(nrow)],
+    )
+    return res  # noqa: RET504
 
 
 def two_d_np_array_double_to_native(
-    ffi: FFI, data: np.ndarray
+    ffi: FFI,
+    data: np.ndarray,
 ) -> OwningCffiNativeHandle:
     """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats.
 
@@ -712,9 +786,9 @@ def two_d_np_array_double_to_native(
     """
     if not isinstance(data, np.ndarray):
         raise TypeError("Expected np.ndarray, got " + str(type(data)))
-    if len(data.shape) > 2:
+    if len(data.shape) > 2:  # noqa: PLR2004
         raise TypeError(
-            "Expected an array of dimension 1 or 2, got " + str(len(data.shape))
+            "Expected an array of dimension 1 or 2, got " + str(len(data.shape)),
         )
 
     if len(data.shape) == 1:
@@ -761,9 +835,8 @@ def c_charptrptr_as_string_list(ffi: FFI, ptr: CffiData, size: int) -> List[str]
         List[str]: converted data
     """
     # TODO check type
-    strings = ffi.cast("char*[%d]" % (size,), ptr)
-    res = [as_string(ffi.string(strings[i])) for i in range(size)]
-    return res
+    strings = ffi.cast("char*[%d]" % (size,), ptr)  # noqa: UP031
+    return [as_string(ffi.string(strings[i])) for i in range(size)]
 
 
 def dtts_as_datetime(ptr: CffiData) -> datetime:
@@ -779,8 +852,14 @@ def dtts_as_datetime(ptr: CffiData) -> datetime:
         datetime: converted data
     """
     dtts = ptr  # ffi.cast('date_time_to_second*', ptr)
-    return datetime(
-        dtts.year, dtts.month, dtts.day, dtts.hour, dtts.minute, dtts.second
+    return datetime(  # noqa: DTZ001
+        dtts.year,
+        dtts.month,
+        dtts.day,
+        dtts.hour,
+        dtts.minute,
+        dtts.second,
+        tzinfo=None,
     )
 
 
@@ -794,39 +873,40 @@ def _copy_datetime_to_dtts(dt: datetime, ptr: CffiData) -> None:
 
 
 def datetime_to_dtts(ffi: FFI, dt: datetime) -> OwningCffiNativeHandle:
-    """datetime_to_dtts"""
+    """Convert a python datetime to a cffi pointer to a C struct `date_time_to_second`."""
     ptr = ffi.new("date_time_to_second*")
     _copy_datetime_to_dtts(dt, ptr)
     return OwningCffiNativeHandle(ptr)
 
 
 def new_date_time_to_second(ffi: FFI) -> OwningCffiNativeHandle:
-    """new_date_time_to_second"""
+    """Create a new cffi pointer to a C struct `date_time_to_second`."""
     ptr = ffi.new("date_time_to_second*")
     return OwningCffiNativeHandle(ptr)
 
 
 def as_bytes(obj: Any) -> Union[bytes, Any]:
-    """Convert obj to bytes if it is a string type
+    """Convert obj to bytes, if it is a type of string.
 
-    Mostly a legacy for python2/3 compatibility.
+    This function is mostly a legacy for python2/3 compatibility, though python 2 in practice is probably not supported anymore by the package.
+    In python3, it converts str to bytes, and leaves bytes unchanged.
+    In python2, it converts unicode to bytes, and leaves str unchanged.
 
     Args:
         obj (Any): object to convert
 
     Returns:
-        Union[bytes, Any]: object converted to bytes if it was a type of string
+        Union[bytes, Any]: object converted to bytes if it was a type of string. If unknown type, returns the object unchanged.
     """
     if isinstance(obj, bytes):
         return obj
-    elif isinstance(obj, six.string_types):
+    if isinstance(obj, six.string_types):
         return obj.encode("utf-8")
-    else:
-        return obj
+    return obj
 
 
 def as_arrayof_bytes(ffi: FFI, obj: List[Any]) -> OwningCffiNativeHandle:
-    """Convert a list of "strings" to a char** like C array
+    """Convert a list of "strings" to a char** like C array.
 
     Args:
         obj (List): list of objects (strings) to convert
@@ -844,7 +924,7 @@ def as_arrayof_bytes(ffi: FFI, obj: List[Any]) -> OwningCffiNativeHandle:
 
 
 def as_character_vector(ffi: FFI, obj: List[Any]) -> OwningCffiNativeHandle:
-    """Convert a list of "strings" to a character_vector* native struct"""
+    """Convert a list of "strings" to a character_vector* native struct."""
     cv = ffi.new("character_vector*")
     cv.size = len(obj)
     names = as_arrayof_bytes(ffi, obj)
@@ -871,12 +951,10 @@ def as_string(obj: Any) -> Union[str, Any]:
 
 
 def convert_strings(func: Callable) -> Callable:
-    """Returns a wrapper that converts any str/unicode object arguments to
-    bytes.
-    """
+    """Returns a wrapper that converts any str/unicode object arguments to bytes."""
 
     @wraps(func)
-    def wrapper(*args, **kwargs) -> Any:
+    def wrapper(*args:tuple, **kwargs:dict) -> Any:
         """Convert args.
 
         :param func func: Python function wrapping a lakeoned function.
@@ -885,27 +963,30 @@ def convert_strings(func: Callable) -> Callable:
         for arg in args:
             new_args.append(as_bytes(arg))
         new_kwargs = {}
-        for key in kwargs:
+        for key in kwargs:  # noqa: PLC0206
             new_kwargs[key] = as_bytes(kwargs[key])
 
         # Call the function
         return_value = func(*new_args, **new_kwargs)
         if isinstance(return_value, (list, tuple)):
             return [as_string(obj) for obj in return_value]
-        else:
-            return as_string(return_value)
+        return as_string(return_value)
 
     return wrapper
 
 
 class CffiMarshal:
-    """A helper class for marshalling data to/from a native library module (i.e. DLL)"""
+    """A helper class for marshalling data to/from a native library module (i.e. DLL)."""
 
     def __init__(self, ffi: FFI) -> None:
+        """A helper class for marshalling data to/from a native library module (i.e. DLL)."""
         self._ffi: FFI = ffi
 
     def as_numeric_np_array(
-        self, ptr: CffiData, size: int, shallow: bool = False
+        self,
+        ptr: CffiData,
+        size: int,
+        shallow: bool = False,  # noqa: FBT001, FBT002
     ) -> np.ndarray:
         """Convert if possible a cffi pointer to a C data array, into a numpy array.
 
@@ -924,7 +1005,7 @@ class CffiMarshal:
 
     @property
     def nullptr(self) -> Any:
-        """The C NULL pointer
+        """The C NULL pointer.
 
         Returns:
             Any: returns FFI.NULL
@@ -932,17 +1013,19 @@ class CffiMarshal:
         return FFI.NULL
 
     def as_np_array_double(
-        self, ptr: CffiData, size: int, shallow: bool = False
+        self,
+        ptr: CffiData,
+        size: int,
+        shallow: bool = False,  # noqa: FBT001, FBT002
     ) -> np.ndarray:
         """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats `double[n]`.
-            The returned numpy array may be directly pointing to the original data (faster performance), or a deep copy (memory safety - "normal" numpy array)
+
+        The returned numpy array may be directly pointing to the original data (faster performance), or a deep copy (memory safety - "normal" numpy array)
 
         Args:
             ptr (CffiData): cffi pointer (FFI.CData)
             size (int): array size
-            shallow (bool): If True the resulting numpy array points directly to the native data array.
-            Otherwise, return a numpy array with a deep copy of the data, managed by Python.
-            Defaults to False.
+            shallow (bool): If True the resulting numpy array points directly to the native data array. Otherwise, return a numpy array with a deep copy of the data, managed by Python. Defaults to False.
 
         Raises:
             RuntimeError: conversion is not supported
@@ -953,7 +1036,10 @@ class CffiMarshal:
         return as_np_array_double(self._ffi, ptr, size, shallow)
 
     def two_d_as_np_array_double(
-        self, ptr: CffiData, nrow: int, ncol: int
+        self,
+        ptr: CffiData,
+        nrow: int,
+        ncol: int,
     ) -> np.ndarray:
         """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats.
 
@@ -985,7 +1071,7 @@ class CffiMarshal:
         return c_string_as_py_string(self._ffi, ptr)
 
     def dict_to_named_values(self, data: Dict[str, float]) -> OwningCffiNativeHandle:
-        """Convert a dictionary to a cffi pointer to a `named_values_vector` struct
+        """Convert a dictionary to a cffi pointer to a `named_values_vector` struct.
 
         Args:
             data (Dict[str,float]): mapping from keys to numeric values
@@ -996,7 +1082,7 @@ class CffiMarshal:
         return dict_to_named_values(self._ffi, data)
 
     def new_int_scalar_ptr(self, value: int = 0) -> "CffiData":
-        """Creates a new C array of integers
+        """Creates a new C array of integers.
 
         Args:
             value (int, optional): _description_. Defaults to 0.
@@ -1036,7 +1122,7 @@ class CffiMarshal:
         return self.c_charptrptr_as_string_list(ptr.values, ptr.size)
 
     def as_datetime(self, ptr: CffiData) -> datetime:
-        """Convert if possible a cffi pointer to a C date_time_to_second struct, into a datetime
+        """Convert if possible a cffi pointer to a C date_time_to_second struct, into a datetime.
 
         Args:
             ptr (CffiData): cffi pointer (FFI.CData)
@@ -1050,19 +1136,19 @@ class CffiMarshal:
         return dtts_as_datetime(ptr)
 
     def datetime_to_dtts(self, dt: datetime) -> OwningCffiNativeHandle:
-        """TODO docstring"""
+        """Convert a python datetime to a cffi pointer to a C struct `date_time_to_second`."""
         return datetime_to_dtts(self._ffi, dt)
 
     def as_arrayof_bytes(self, obj: List[Any]) -> OwningCffiNativeHandle:
-        """Convert a list of "strings" to a char** like C array"""
+        """Convert a list of "strings" to a char** like C array."""
         return as_arrayof_bytes(self._ffi, obj)
 
     def as_character_vector(self, obj: List[Any]) -> OwningCffiNativeHandle:
-        """Convert a list of "strings" to a character_vector* native struct"""
+        """Convert a list of "strings" to a character_vector* native struct."""
         return as_character_vector(self._ffi, obj)
 
     def named_values_to_dict(self, ptr: CffiData) -> Dict[str, float]:
-        """Convert if possible a cffi pointer to a `named_values_vector` struct, into a dictionary
+        """Convert if possible a cffi pointer to a `named_values_vector` struct, into a dictionary.
 
         Args:
             ptr (CffiData): cffi pointer (FFI.CData) to a `named_values_vector` struct
@@ -1076,7 +1162,7 @@ class CffiMarshal:
         return named_values_to_dict(self._ffi, ptr)
 
     def string_map_to_dict(self, ptr: CffiData) -> Dict[str, str]:
-        """Convert if possible a cffi pointer to a `string_string_map` struct, into a dictionary
+        """Convert if possible a cffi pointer to a `string_string_map` struct, into a dictionary.
 
         Args:
             ptr (CffiData): cffi pointer (FFI.CData) to a `string_string_map` struct
@@ -1090,11 +1176,11 @@ class CffiMarshal:
         return string_map_to_dict(self._ffi, ptr)
 
     def dict_to_string_map(self, data: Dict[str, str]) -> OwningCffiNativeHandle:
-        """TODO docstring"""
+        """Convert a dictionary to a cffi pointer to a `string_string_map` struct."""
         return dict_to_string_map(self._ffi, data)
 
-    def as_charptr(self, x: str, wrap: bool = False) -> CffiData:
-        """convert an object to `bytes`, create as C array of char and copy values to it. Equivalent to `char arg[] = "world"` if x is the bytes b"world"
+    def as_charptr(self, x: str, wrap: bool = False) -> CffiData:  # noqa: FBT001, FBT002
+        """Convert an object to `bytes`, create as C array of char and copy values to it. Equivalent to `char arg[] = "world"` if x is the bytes b"world".
 
         Args:
             x (str): a string-like object; bytes or str, or string like object that can be encoded to bytes (six.string_like)
@@ -1106,7 +1192,7 @@ class CffiMarshal:
         return as_charptr(self._ffi, x, wrap)
 
     def values_to_nparray(self, ptr: CffiData) -> np.ndarray:
-        """Convert if possible a cffi pointer to a `values_vector` struct, into a python array
+        """Convert if possible a cffi pointer to a `values_vector` struct, into a python array.
 
         Args:
             ptr (CffiData): cffi pointer (FFI.CData) to a `values_vector` struct
@@ -1120,16 +1206,17 @@ class CffiMarshal:
         return values_to_nparray(self._ffi, ptr)
 
     def create_values_struct(
-        self, data: Union[List[float], np.ndarray]
+        self,
+        data: Union[List[float], np.ndarray],
     ) -> OwningCffiNativeHandle:
-        """TODO docstring"""
+        """Convert a list or array of numeric values to a cffi pointer to a `values_vector` struct."""
         return create_values_struct(self._ffi, data)
 
     # def time_series_geometry(self, ptr:CffiData) -> TimeSeriesGeometry:
     #     return time_series_geometry(self._ffi, ptr)
 
     def as_native_tsgeom(self, tsgeom: TimeSeriesGeometry) -> TimeSeriesGeometryNative:
-        """C-compatible representation of a time series geometry
+        """C-compatible representation of a time series geometry.
 
         Returns:
             TimeSeriesGeometryNative: wrapper around a cdata pointer to a new C struct `regular_time_series_geometry`
@@ -1137,35 +1224,49 @@ class CffiMarshal:
         return tsgeom.as_native(self._ffi)
 
     def as_xarray_time_series(self, ptr: CffiData) -> xr.DataArray:
-        """TODO docstring"""
+        """Convert a native time series structure to an xarray representation."""
         return as_xarray_time_series(self._ffi, ptr)
 
     def get_native_tsgeom(self, pd_series: pd.Series) -> OwningCffiNativeHandle:
-        """TODO docstring"""
+        """Get a native representation of the geometry of a time series. A simple heuristic is used to find the time step."""
         return get_native_tsgeom(self._ffi, pd_series)
 
     def new_native_tsgeom(self) -> TimeSeriesGeometryNative:
-        """TODO docstring"""
+        """Create a new native time series geometry struct."""
         return TimeSeriesGeometryNative(self._ffi)
 
     def new_date_time_to_second(self) -> OwningCffiNativeHandle:
-        """TODO docstring"""
+        """Create a new cffi pointer to a C struct `date_time_to_second`."""
         return new_date_time_to_second(self._ffi)
 
-    def new_native_struct(self, type: str) -> OwningCffiNativeHandle:
-        """TODO docstring"""
-        return OwningCffiNativeHandle(self._ffi.new(type), type)
+    def new_native_struct(self, type_of_struct: str) -> OwningCffiNativeHandle:
+        """Create a new native C struct of the specified type."""
+        return OwningCffiNativeHandle(self._ffi.new(type_of_struct), type_of_struct)
 
     def new_ctype_array(
-        self, ctype: str, size: int, wrap: bool = False
+        self,
+        ctype: str,
+        size: int,
+        wrap: bool = False,  # noqa: FBT001, FBT002
     ) -> Union[OwningCffiNativeHandle, CffiData]:
-        """TODO docstring"""
+        """Creates a new C array of the specified type and size.
+
+        Args:
+            ctype (str): C type of the array elements, e.g. "int", "double", "char*"
+            size (int): array size
+            wrap (bool, optional): return a "naked" cdata pointer object if False, or wrapped in a `OwningCffiNativeHandle` if True. Defaults to False.
+
+        Returns:
+            Union[OwningCffiNativeHandle,CffiData]: a (wrapper to a) cdata pointer object owning a new array of the specified type and length `size`
+        """
         return new_ctype_array(self._ffi, ctype, size, wrap)
 
     def new_int_array(
-        self, size: int, wrap: bool = False
+        self,
+        size: int,
+        wrap: bool = False,  # noqa: FBT001, FBT002
     ) -> Union[OwningCffiNativeHandle, CffiData]:
-        """Creates a new C array of integers `int[n]`
+        """Creates a new C array of integers `int[n]`.
 
         Args:
             size (int): array size
@@ -1174,39 +1275,101 @@ class CffiMarshal:
         Returns:
             Union[OwningCffiNativeHandle,CffiData]: a (wrapper to a) cdata pointer object owning a new array of integers of length `size`
         """
-
         return new_int_array(self._ffi, size, wrap)
 
     def new_double_array(
-        self, size: int, wrap: bool = False
+        self,
+        size: int,
+        wrap: bool = False,  # noqa: FBT001, FBT002
     ) -> Union[OwningCffiNativeHandle, CffiData]:
-        """TODO docstring"""
+        """Creates a new C array of double precision floats `double[n]`.
+
+        Args:
+            size (int): array size
+            wrap (bool, optional): return a "naked" cdata pointer object if False, or wrapped in a `OwningCffiNativeHandle` if True. Defaults to False.
+
+        Returns:
+            Union[OwningCffiNativeHandle,CffiData]: a (wrapper to a) cdata pointer object owning a new array of double precision floats of length `size`
+        """
         return new_double_array(self._ffi, size, wrap)
 
     def new_doubleptr_array(
-        self, size: int, wrap: bool = False
+        self,
+        size: int,
+        wrap: bool = False,  # noqa: FBT001, FBT002
     ) -> Union[OwningCffiNativeHandle, CffiData]:
-        """TODO docstring"""
+        """Creates a new C array of pointers to double precision floats `double*[n]`.
+
+        Args:
+            size (int): array size
+            wrap (bool, optional): return a "naked" cdata pointer object if False, or wrapped in a `OwningCffiNativeHandle` if True. Defaults to False.
+
+        Returns:
+            Union[OwningCffiNativeHandle,CffiData]: a (wrapper to a) cdata pointer object owning a new array of pointers to double precision floats of length `size`
+        """
         return new_doubleptr_array(self._ffi, size, wrap)
 
     def new_charptr_array(
-        self, size: int, wrap: bool = False
+        self,
+        size: int,
+        wrap: bool = False,  # noqa: FBT001, FBT002
     ) -> Union[OwningCffiNativeHandle, CffiData]:
-        """TODO docstring"""
+        """Creates a new C array of pointers to char (strings) `char*[n]`.
+
+        Args:
+            size (int): array size
+            wrap (bool, optional): return a "naked" cdata pointer object if False, or wrapped in a `OwningCffiNativeHandle` if True. Defaults to False.
+
+        Returns:
+            Union[OwningCffiNativeHandle,CffiData]: a (wrapper to a) cdata pointer object owning a new array of pointers to char (strings) of length `size`
+        """
         return new_charptr_array(self._ffi, size, wrap)
 
     def as_c_double_array(
-        self, data: np.ndarray, shallow: bool = False
+        self,
+        data: np.ndarray,
+        shallow: bool = False,  # noqa: FBT001, FBT002
     ) -> OwningCffiNativeHandle:
-        """TODO docstring"""
+        """Convert a list or array of numeric values to a cffi pointer to a C array of double precision floats.
+
+        Args:
+            data (Union[List[float], np.ndarray]): list or array of numeric values
+            shallow (bool, optional): If True the resulting C array points directly to the data in the input numpy array (if it is a numpy array),
+                otherwise a new C array is created and the data is copied to it. Defaults to False.
+                Note that if the input data is a list, it will be converted to a numpy array and the resulting C array will not be shallow.
+
+        Returns:
+            OwningCffiNativeHandle: A wrapper that owns the memory allocated for the resulting C array of double precision floats.
+        """
         return as_c_double_array(self._ffi, data, shallow)
 
     def as_native_time_series(self, data: TimeSeriesLike) -> OwningCffiNativeHandle:
-        """TODO docstring"""
+        """Convert a pure python time series to a native representation via a C struct `multi_regular_time_series_data`.
+
+        Args:
+            data (TimeSeriesLike): xarray or pandas based time series
+
+        Raises:
+            TypeError: unexpected input type
+
+        Returns:
+            OwningCffiNativeHandle: wrapper to a C struct `multi_regular_time_series_data`
+        """
         return as_native_time_series(self._ffi, data)
 
     def two_d_np_array_double_to_native(
-        self, data: np.ndarray
+        self,
+        data: np.ndarray,
     ) -> OwningCffiNativeHandle:
-        """TODO docstring"""
+        """Convert if possible a cffi pointer to a C data array, into a numpy array of double precision floats.
+
+        Args:
+            data (np.ndarray): data
+
+        Raises:
+            RuntimeError: conversion is not supported
+
+        Returns:
+            OwningCffiNativeHandle: wrapper to a C array of pointers to double precision floats of length `nrow`
+        """
         return two_d_np_array_double_to_native(self._ffi, data)
