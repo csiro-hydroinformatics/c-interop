@@ -27,6 +27,7 @@ ConvertibleToTimestamp = Union[str, datetime, np.datetime64, pd.Timestamp]
 _SECONDS_IN_DAY = 24 * 3600
 _SECONDS_IN_HOUR = 3600
 
+
 def create_even_time_index(
     start: ConvertibleToTimestamp,
     time_step_seconds: int,
@@ -141,9 +142,9 @@ def as_timestamp(t: ConvertibleToTimestamp) -> pd.Timestamp:
                 )
             return t
         if isinstance(t, datetime) and t.tzinfo is not None:
-                raise ValueError(
-                    "Not supported - Cannot pass a datetime or Timestamp with tzinfo with the tz parameter. Use tz_convert instead",
-                )
+            raise ValueError(
+                "Not supported - Cannot pass a datetime or Timestamp with tzinfo with the tz parameter. Use tz_convert instead",
+            )
         parsed = pd.Timestamp(t)
         if parsed.tz is not None:
             raise ValueError(
@@ -410,7 +411,9 @@ def pd_series_to_xr_series(series: pd.Series) -> xr.DataArray:
 
 def _pd_index(x: TimeSeriesLike) -> pd.DatetimeIndex:
     if not isinstance(x.index, pd.DatetimeIndex):
-        raise TypeError(f"received a structure {type(x)} with an index property, but required index is not a DatetimeIndex: {type(x.index)}")
+        raise TypeError(
+            f"received a structure {type(x)} with an index property, but required index is not a DatetimeIndex: {type(x.index)}"
+        )
     return x.index
 
 

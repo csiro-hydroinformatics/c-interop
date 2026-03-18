@@ -1,3 +1,5 @@
+"""Unit tests for the CFFI native handle and related marshalling functions."""
+
 import os
 import sys
 from datetime import datetime

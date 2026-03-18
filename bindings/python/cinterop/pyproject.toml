@@ -92,6 +92,7 @@ ci = [
     "mypy>=1.10",
     "types-markdown>=3.6",
     "types-pyyaml>=6.0",
+    "pytz"
 ]
  docs = [
     "markdown-callouts>=0.4",

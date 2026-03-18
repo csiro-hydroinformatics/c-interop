@@ -1,3 +1,5 @@
+"""Unit tests for the time series utilities."""
+
 import os
 import sys
 from datetime import datetime

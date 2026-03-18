@@ -622,7 +622,8 @@ def as_native_time_series(ffi: FFI, data: TimeSeriesLike) -> OwningCffiNativeHan
         elif len(data.shape) == 2:  # noqa: PLR2004
             if not set(data.variable.dims) == {ENSEMBLE_DIMNAME, TIME_DIMNAME}:
                 raise ValueError(
-                    "Expected dimensions of the data array to be exactly 'ensemble' and 'time', but got: " + str(data.variable.dims),
+                    "Expected dimensions of the data array to be exactly 'ensemble' and 'time', but got: "
+                    + str(data.variable.dims),
                 )
             ensemble_size = len(data.coords[ENSEMBLE_DIMNAME].values)
             if data.variable.dims[0] != ENSEMBLE_DIMNAME:
@@ -954,7 +955,7 @@ def convert_strings(func: Callable) -> Callable:
     """Returns a wrapper that converts any str/unicode object arguments to bytes."""
 
     @wraps(func)
-    def wrapper(*args:tuple, **kwargs:dict) -> Any:
+    def wrapper(*args: tuple, **kwargs: dict) -> Any:
         """Convert args.
 
         :param func func: Python function wrapping a lakeoned function.
