@@ -111,3 +111,4 @@ ci = [
 
 [tool.uv]
 default-groups = ["maintain", "ci", "docs"]
+constraint-dependencies = ["packaging<26"]
