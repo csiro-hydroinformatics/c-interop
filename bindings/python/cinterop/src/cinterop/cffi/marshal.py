@@ -31,7 +31,7 @@ NativePointerLike: TypeAlias = Union[OwningCffiNativeHandle, CffiNativeHandle, C
 # if TYPE_CHECKING:
 
 
-_c2dtype = {}
+_c2dtype: dict[str, np.dtype] = {}
 """Mapping from a C pointer type to a numpy dtypes"""
 
 _c2dtype["float *"] = np.dtype("f4")
@@ -276,7 +276,7 @@ def dict_to_named_values(ffi: FFI, data: Dict[str, float]) -> OwningCffiNativeHa
     ptr.values = values.ptr
     ptr.names = names.ptr
     result = OwningCffiNativeHandle(ptr)
-    result.keepalive = [names, values]
+    result.keepalive = [names, values] # type: ignore[attr-defined]
     return result
 
 
@@ -321,7 +321,7 @@ def dict_to_string_map(ffi: FFI, data: Dict[str, str]) -> OwningCffiNativeHandle
     values = as_arrayof_bytes(ffi, list(data.values()))
     ptr.values = values.ptr
     result = OwningCffiNativeHandle(ptr)
-    result.keepalive = [keys, values]
+    result.keepalive = [keys, values] # type: ignore[attr-defined]
     return result
 
 
@@ -642,7 +642,7 @@ def as_native_time_series(ffi: FFI, data: TimeSeriesLike) -> OwningCffiNativeHan
     num_data = two_d_np_array_double_to_native(ffi, np_data)
     ptr.numeric_data = num_data.ptr
     result = OwningCffiNativeHandle(ptr)
-    result.keepalive = [tsg, num_data]
+    result.keepalive = [tsg, num_data] # type: ignore[attr-defined]
     return result
 
 
@@ -796,12 +796,12 @@ def two_d_np_array_double_to_native(
         data = data.reshape((1, len(data)))
 
     nrow = data.shape[0]
-    ptr = new_doubleptr_array(ffi, nrow)
+    ptr: CffiData = new_doubleptr_array(ffi, nrow, wrap=False)
     items = [as_c_double_array(ffi, data[i, :]).ptr for i in range(nrow)]
     for i in range(nrow):
         ptr[i] = items[i]
     result = OwningCffiNativeHandle(ptr)
-    result.keepalive = items
+    result.keepalive = items # type: ignore[attr-defined]
     return result
 
 
@@ -915,12 +915,12 @@ def as_arrayof_bytes(ffi: FFI, obj: List[Any]) -> OwningCffiNativeHandle:
     Returns:
         List: objects converted to bytes if it was a type of string
     """
-    ptr = new_charptr_array(ffi, len(obj))
+    ptr: CffiData = new_charptr_array(ffi, len(obj), wrap=False)
     items = [ffi.new("char[]", as_bytes(obj[i])) for i in range(len(obj))]
     for i in range(len(obj)):
         ptr[i] = items[i]
     result = OwningCffiNativeHandle(ptr)
-    result.keepalive = items
+    result.keepalive = items # type: ignore[attr-defined]
     return result
 
 
@@ -931,7 +931,7 @@ def as_character_vector(ffi: FFI, obj: List[Any]) -> OwningCffiNativeHandle:
     names = as_arrayof_bytes(ffi, obj)
     cv.values = names.ptr
     result = OwningCffiNativeHandle(cv)
-    result.keepalive = names
+    result.keepalive = names # type: ignore[attr-defined]
     return result
 
 
@@ -1224,7 +1224,7 @@ class CffiMarshal:
         """
         return tsgeom.as_native(self._ffi)
 
-    def as_xarray_time_series(self, ptr: CffiData) -> xr.DataArray:
+    def as_xarray_time_series(self, ptr: CffiData) -> Optional[xr.DataArray]:
         """Convert a native time series structure to an xarray representation."""
         return as_xarray_time_series(self._ffi, ptr)
 

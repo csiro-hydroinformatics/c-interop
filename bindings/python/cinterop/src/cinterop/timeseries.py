@@ -412,7 +412,7 @@ def pd_series_to_xr_series(series: pd.Series) -> xr.DataArray:
 def _pd_index(x: TimeSeriesLike) -> pd.DatetimeIndex:
     if not isinstance(x.index, pd.DatetimeIndex):
         raise TypeError(
-            f"received a structure {type(x)} with an index property, but required index is not a DatetimeIndex: {type(x.index)}"
+            f"received a structure {type(x)} with an index property, but required index is not a DatetimeIndex: {type(x.index)}",
         )
     return x.index
 
