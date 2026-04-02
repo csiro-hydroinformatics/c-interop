@@ -1,0 +1,12 @@
+# c-interop
+
+> cinterop - helpers for Python-C interop via CFFI
+
+## Usage
+
+- [Overview](https://csiro-hydroinformatics.github.io/c-interop/index.md)
+
+## API
+
+- [API reference](https://csiro-hydroinformatics.github.io/c-interop/reference/api/index.md)
+

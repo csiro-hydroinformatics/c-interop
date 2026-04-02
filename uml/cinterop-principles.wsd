@@ -1,0 +1,64 @@
+@startuml cinterop-principles
+
+' left to right direction
+
+package refcount.interop {
+  class OwningCffiNativeHandle
+}
+
+package your_package.wrap {
+  class MyNativeInteropModule
+}
+
+package cinterop.cffi {
+  ' class TimeSeriesGeometry
+  ' class TimeSeriesGeometryNative
+
+  class CffiMarshal{
+    {field} _ffi
+  }
+}
+
+package cffi {
+  class FFILibrary
+  class FFI
+}
+
+' MyNativeInteropModule - FFI : creates >
+MyNativeInteropModule -- CffiMarshal : creates >
+
+CffiMarshal -- OwningCffiNativeHandle : handles >
+CffiMarshal - FFI : wraps >
+FFI - FFILibrary : opens >
+
+note "Hides lower-level cffi marshaling\nfrom the user." as N2
+CffiMarshal .. N2
+
+note "Low-level wrapper calling \nC functions in a native library" as N3
+FFILibrary .. N3
+
+' OwningCffiNativeHandle <|-- TimeSeriesGeometryNative
+
+' package waa.forecast {
+'   class InflowForecasting
+'   class RuleCurves
+
+'   class ForecastSimulation
+'   ' class ForecastInputs
+
+'   InflowForecasting *-- ForecastDateSelection
+'   RuleCurves *-- ForecastDateSelection
+
+'   ForecastSimulation --|> ForecastInflows
+'   ForecastSimulation *-- RuleCurves
+'   ForecastSimulation *-- ReservoirTargets
+
+' }
+
+' package "waasrv" #DDDDDD {
+'   Object <|-- ArrayList
+' }
+
+
+@enduml
+
